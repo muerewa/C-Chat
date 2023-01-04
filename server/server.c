@@ -8,7 +8,7 @@
 #include "string.h"
 #include "stdlib.h"
 
-int users[30]; // Массив сокетов
+int users[30] = {0}; // Массив сокетов
 int count = 0; // Счетчик пользователей
 
 struct args {
@@ -17,17 +17,26 @@ struct args {
 }; // Аргументы для функции Connection
 
 void *Connection(void *argv) {
+
     while (true) {
         char buffer[256];
-        int valread;
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
-        if((valread = read(fd, buffer, 255)) > 0) { // Слушаем сообщения
+        int pthcount = ((struct args*)argv)->pthcount;
+        int valread = read(fd, buffer, 255);
+        if(valread != 0) { // Слушаем сообщения
             buffer[valread] = '\0';
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(users[i] != fd) {
                     send(users[i] , buffer , strlen(buffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
+        } else {
+            char connBuff[] = "disconnect";
+            for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
+                send(users[i] , connBuff , strlen(connBuff) , 0 ); // Отправляем сообщение всем кроме нас
+            }
+            users[pthcount] = 0;
+            pthread_exit(NULL);
         }
     }
 }
