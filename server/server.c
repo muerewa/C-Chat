@@ -31,24 +31,33 @@ void *Connection(void *argv) {
         int pthcount = ((struct args*)argv)->pthcount;
         int valread = read(fd, buffer, 255);
         struct users *user = ((struct args*)argv)->user;
-
+        buffer[strlen(buffer) - 1] = '\0';
         if(valread != 0) { // Слушаем сообщения
-            if (user->msgCount == 0) {
-                user->name = strdup(buffer);
+            char newBuffer[255];
 
+            if(!user->name) {
+                user->name = strdup(buffer);
             }
-            buffer[valread] = '\0';
+            strcpy(newBuffer, user->name);
+            if (user->msgCount == 0) {
+                strcat(newBuffer, " joined chat\n");
+            } else {
+                strcat(newBuffer, ": ");
+                strcat(newBuffer, buffer);
+            }
+
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(users[i] != fd) {
-                    send(users[i], user->name, strlen(user->name), 0);
-                    send(users[i] , buffer , strlen(buffer) , 0 ); // Отправляем сообщение всем кроме нас
+                    send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
-            user->msgCount += 1;
+            user->msgCount = 1;
         } else {
-            char connBuff[] = "disconnect";
+            char connBuffer[255];
+            strcpy(connBuffer, user->name);
+            strcat(connBuffer, " disconnected\n");
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                send(users[i] , connBuff , strlen(connBuff) , 0 ); // Отправляем сообщение всем кроме нас
+                send(users[i] , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
             }
             users[pthcount] = 0;
             free(user->name);
