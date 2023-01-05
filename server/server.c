@@ -12,46 +12,50 @@ int users[30] = {0}; // Массив сокетов
 int count = 0; // Счетчик пользователей
 
 struct args {
-    int pthcount;
-    int fd;
-    struct users *user;
+    int pthcount; // номер пользователя
+    int fd; // файловый дескриптор
+    struct users *user; // структура пользователя
 }; // Аргументы для функции Connection
 
 struct users {
-    int fd;
-    int msgCount;
-    char *name;
+    int fd; // файловый дескриптор
+    int msgCount; // счетчик сообщений
+    char *name; // имя пользователя
 };
 
 void *Connection(void *argv) {
 
     while (true) {
         char buffer[256];
+
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
-        int pthcount = ((struct args*)argv)->pthcount;
-        int valread = read(fd, buffer, 255);
-        struct users *user = ((struct args*)argv)->user;
+
+        int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
+        int valread = read(fd, buffer, 255); // Читаем сообщение
+        struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
+
         buffer[strlen(buffer) - 1] = '\0';
+
         if(valread != 0) { // Слушаем сообщения
-            char newBuffer[255];
+            char newBuffer[255]; // Создаем буффер
 
             if(!user->name) {
-                user->name = strdup(buffer);
+                user->name = strdup(buffer); // Если нет имени пользователя, то создаем его
             }
-            strcpy(newBuffer, user->name);
+            strcpy(newBuffer, user->name); // Добавляем имя в буффер
             if (user->msgCount == 0) {
-                strcat(newBuffer, " joined chat\n");
+                strcat(newBuffer, " joined chat\n"); // Если первое сообщение то выводим сообщение о присоединении
             } else {
                 strcat(newBuffer, ": ");
-                strcat(newBuffer, buffer);
+                strcat(newBuffer, buffer); // Добавляем в буффер сообщение
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(users[i] != fd) {
+                if(i != pthcount) {
                     send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
-            user->msgCount = 1;
+            user->msgCount = 1; // Делаем счетчик не равным нулю
         } else {
             char connBuffer[255];
             strcpy(connBuffer, user->name);
@@ -60,9 +64,9 @@ void *Connection(void *argv) {
                 send(users[i] , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
             }
             users[pthcount] = 0;
-            free(user->name);
-            free(user);
-            pthread_exit(NULL);
+            free(user->name); // Освобождаем имя в структуре
+            free(user); // Освобождаем структуру
+            pthread_exit(NULL); // Выходим из потока
         }
     }
 }
@@ -73,18 +77,23 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             users[count++] = fd; // Добавляем в массив дескриптор
+
             char buffer[30];
             sprintf(buffer, "Connection %d", count);
-            puts(buffer);
-            pthread_t thread_id = count;
+            puts(buffer); // Выводим сообщение о присоединении в лог
+
+            pthread_t thread_id = count; // создаем id потока
             int pthcount = count;
-            struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Создаем структуру аргументов
+            struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Инициализируем структуру аргументов
+
             Thread->pthcount = pthcount;
             Thread->fd = fd;
-            struct users *user = malloc(sizeof(users));
+
+            struct users *user = malloc(sizeof(users)); // Инициализируем структуру
             user->fd = fd;
             user->msgCount = 0;
-            Thread->user = user;
+
+            Thread->user = user; // Передаем структуру в аргументы потока
             pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }
     }
