@@ -14,7 +14,14 @@ int count = 0; // Счетчик пользователей
 struct args {
     int pthcount;
     int fd;
+    struct users *user;
 }; // Аргументы для функции Connection
+
+struct users {
+    int fd;
+    int msgCount;
+    char *name;
+};
 
 void *Connection(void *argv) {
 
@@ -23,19 +30,29 @@ void *Connection(void *argv) {
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
         int pthcount = ((struct args*)argv)->pthcount;
         int valread = read(fd, buffer, 255);
+        struct users *user = ((struct args*)argv)->user;
+
         if(valread != 0) { // Слушаем сообщения
+            if (user->msgCount == 0) {
+                user->name = strdup(buffer);
+
+            }
             buffer[valread] = '\0';
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(users[i] != fd) {
+                    send(users[i], user->name, strlen(user->name), 0);
                     send(users[i] , buffer , strlen(buffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
+            user->msgCount += 1;
         } else {
             char connBuff[] = "disconnect";
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 send(users[i] , connBuff , strlen(connBuff) , 0 ); // Отправляем сообщение всем кроме нас
             }
             users[pthcount] = 0;
+            free(user->name);
+            free(user);
             pthread_exit(NULL);
         }
     }
@@ -55,6 +72,10 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Создаем структуру аргументов
             Thread->pthcount = pthcount;
             Thread->fd = fd;
+            struct users *user = malloc(sizeof(users));
+            user->fd = fd;
+            user->msgCount = 0;
+            Thread->user = user;
             pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }
     }
@@ -75,5 +96,3 @@ int main() {
 
     return 0;
 }
-
-
