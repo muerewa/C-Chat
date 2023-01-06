@@ -78,7 +78,7 @@ void *Connection(void *argv) {
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(users[i] != fd) {
+                if(users[i] != fd && users[i] != 0) {
                     send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
@@ -112,14 +112,15 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
-            users[count++] = fd; // Добавляем в массив дескриптор
+            users[count] = fd; // Добавляем в массив дескриптор
+            pthread_t thread_id = count; // создаем id потока
+            int pthcount = count;
+            ++count;
 
             char *name = "";
             char *msg = "connected";
             printLogMsg(fd,name,msg);
 
-            pthread_t thread_id = count; // создаем id потока
-            int pthcount = count;
             struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Инициализируем структуру аргументов
 
             Thread->pthcount = pthcount;
@@ -148,6 +149,6 @@ int main() {
     socklen_t addrlen = sizeof addr; // Размер адреса
 
     ConnLoop(server, (struct sockaddr*) &addr, &addrlen); // Запускаем принятие пользователей
-
+    close(server);
     return 0;
 }
