@@ -25,43 +25,26 @@ struct users {
     char *name; // имя пользователя
 };
 
-void getTime(char *dateTime) {
+void getTime(char *dateTime) { // Получаем текущую время и дату
     time_t timer;
     struct tm* tm_info;
 
     timer = time(NULL);
     tm_info = localtime(&timer);
 
-    strftime(dateTime, 26, "[%d-%m-%Y %H:%M:%S] ", tm_info);
+    strftime(dateTime, 26, "[%d-%m-%Y %H:%M:%S]", tm_info);
 }
 
-void getIpPort(int fd, char *result) {
+void printLogMsg(int fd, char *name, char *msg) { // Получаем ip и port пользователя
     struct sockaddr_in addr;
     socklen_t addr_size = sizeof(struct sockaddr_in);
     getpeername(fd, (struct sockaddr *)&addr, &addr_size);
 
-    char clientip[50];
-    char clientportstr[50];
     char time[50];
-    int clientport;
-
     getTime(time);
-    strcpy(clientip, inet_ntoa(addr.sin_addr));
-    clientport = htons(addr.sin_port);
-    strcpy(result, time);
-    strcat(result, clientip);
-    strcat(result, ":");
-    sprintf(clientportstr, "%d", clientport);
-    strcat(result, clientportstr);
-}
 
-void printLog(char *msg, int fd, char *name) {
-    char ipport[255];
-    getIpPort(fd, ipport);
-    strcat(ipport, " ");
-    strcat(ipport, name);
-    strcat(ipport, msg);
-    puts(ipport);
+    printf("%s (%s:%d) %s %s\n", time, inet_ntoa(addr.sin_addr), htons(addr.sin_port), name, msg);
+    fflush(stdout);
 }
 
 void *Connection(void *argv) {
@@ -83,8 +66,8 @@ void *Connection(void *argv) {
             if (user->msgCount == 0) {
                 user->name = strdup(buffer);
 
-                char *msg = " joined chat";
-                printLog(msg, fd, user->name);
+                char *msg = "joined chat";
+                printLogMsg(fd, user->name, msg);
 
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, " joined chat\n"); // Если первое сообщение то выводим сообщение о присоединении
@@ -103,8 +86,14 @@ void *Connection(void *argv) {
         } else {
             char connBuffer[255];
 
-            char *msg = " disconnected";
-            printLog(msg, fd, user->name);
+            char *msg = "disconnected";
+
+            if(user->msgCount != 0) {
+                printLogMsg(fd, user->name, msg);
+            } else {
+                char *name = "";
+                printLogMsg(fd, name, msg);
+            }
 
             strcpy(connBuffer, user->name);
             strcat(connBuffer, " disconnected\n");
@@ -125,10 +114,9 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             users[count++] = fd; // Добавляем в массив дескриптор
 
-            char userportip[100];
-            getIpPort(fd, userportip);
-            strcat(userportip, " connected");
-            puts(userportip);
+            char *name = "";
+            char *msg = "connected";
+            printLogMsg(fd,name,msg);
 
             pthread_t thread_id = count; // создаем id потока
             int pthcount = count;
@@ -158,6 +146,7 @@ int main() {
     Listen(server, 5); // Прослушваем(5 человек максимум могут находиться в очереди)
 
     socklen_t addrlen = sizeof addr; // Размер адреса
+
     ConnLoop(server, (struct sockaddr*) &addr, &addrlen); // Запускаем принятие пользователей
 
     return 0;
