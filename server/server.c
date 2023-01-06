@@ -55,6 +55,15 @@ void getIpPort(int fd, char *result) {
     strcat(result, clientportstr);
 }
 
+void printLog(char *msg, int fd, char *name) {
+    char ipport[255];
+    getIpPort(fd, ipport);
+    strcat(ipport, " ");
+    strcat(ipport, name);
+    strcat(ipport, msg);
+    puts(ipport);
+}
+
 void *Connection(void *argv) {
 
     while (true) {
@@ -74,12 +83,8 @@ void *Connection(void *argv) {
             if (user->msgCount == 0) {
                 user->name = strdup(buffer);
 
-                char ipport[255];
-                getIpPort(fd, ipport);
-                strcat(ipport, " ");
-                strcat(ipport, user->name);
-                strcat(ipport, " enter chat");
-                puts(ipport);
+                char *msg = " joined chat";
+                printLog(msg, fd, user->name);
 
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, " joined chat\n"); // Если первое сообщение то выводим сообщение о присоединении
@@ -98,12 +103,8 @@ void *Connection(void *argv) {
         } else {
             char connBuffer[255];
 
-            char ipport[255];
-            getIpPort(fd, ipport);
-            strcat(ipport, " ");
-            strcat(ipport, user->name);
-            strcat(ipport, " disconnected");
-            puts(ipport);
+            char *msg = " disconnected";
+            printLog(msg, fd, user->name);
 
             strcpy(connBuffer, user->name);
             strcat(connBuffer, " disconnected\n");
