@@ -64,7 +64,7 @@ void *Connection(void *argv) {
             user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
 
-            char newBuffer[strlen(user->name) + strlen(msgBuff) + 4]; // Создаем буффер
+            char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
 
              // Добавляем имя в буффер
             if (user->msgCount == 0) {
@@ -73,6 +73,7 @@ void *Connection(void *argv) {
 
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
+
             } else {
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, ": ");
@@ -85,12 +86,11 @@ void *Connection(void *argv) {
                     send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
-            user->msgCount = 1; // Делаем счетчик не равным нулю
-            
+            user->msgCount = 1;
         } else {
-            char connBuffer[255];
-
             char *msg = "disconnected";
+            char *msgBuff = "\bdisconnected\n";
+            char connBuffer[strlen(msgBuff) + strlen(user->name) + 1];
 
             if(user->msgCount != 0) {
                 printLogMsg(fd, user->name, msg);
@@ -101,9 +101,13 @@ void *Connection(void *argv) {
 
             strcpy(connBuffer, user->name);
             strcat(connBuffer, " disconnected\n");
-            for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                send(users[i] , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
+
+            if (user->msgCount != 0) {
+                for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
+                    send(users[i] , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
+                }
             }
+
             users[pthcount] = 0;
             free(user); // Освобождаем структуру
             pthread_exit(NULL); // Выходим из потока
@@ -121,7 +125,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int pthcount = count;
             ++count;
 
-            char *name = "";
+            char *name = "\b";
             char *msg = "connected";
             printLogMsg(fd,name,msg);
 
