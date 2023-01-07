@@ -50,8 +50,8 @@ void printLogMsg(int fd, char *name, char *msg) { // Получаем ip и port
 void *Connection(void *argv) {
 
     while (true) {
-        char buffer[256];
-
+        char buffer[256] = {0};
+  
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
@@ -75,7 +75,7 @@ void *Connection(void *argv) {
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, ": ");
                 strcat(newBuffer, buffer); // Добавляем в буффер сообщение
-                strcat(newBuffer, "\n");
+                strcat(newBuffer, "\n\0");
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
@@ -84,6 +84,7 @@ void *Connection(void *argv) {
                 }
             }
             user->msgCount = 1; // Делаем счетчик не равным нулю
+            
         } else {
             char connBuffer[255];
 
