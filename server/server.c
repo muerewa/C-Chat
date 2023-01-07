@@ -60,21 +60,23 @@ void *Connection(void *argv) {
         buffer[strlen(buffer) - 1] = '\0';
 
         if(valread != 0) { // Слушаем сообщения
-            char newBuffer[255]; // Создаем буффер
+
+            user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
+            char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
+
+            char newBuffer[strlen(user->name) + strlen(msgBuff) + 4]; // Создаем буффер
 
              // Добавляем имя в буффер
             if (user->msgCount == 0) {
-                user->name = strdup(buffer);
-
                 char *msg = "joined chat";
                 printLogMsg(fd, user->name, msg);
 
                 strcpy(newBuffer, user->name);
-                strcat(newBuffer, " joined chat\n"); // Если первое сообщение то выводим сообщение о присоединении
+                strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
             } else {
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, ": ");
-                strcat(newBuffer, buffer); // Добавляем в буффер сообщение
+                strcat(newBuffer, msgBuff); // Добавляем в буффер сообщение
                 strcat(newBuffer, "\n\0");
             }
 
