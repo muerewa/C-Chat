@@ -2,6 +2,8 @@ Simple terminal chat written in C using sockets
 
 ./build.sh
 
-cd src/server; ./server
+cd elfdir
 
-cd src/client; ./client
+./client
+
+./server
