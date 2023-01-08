@@ -8,10 +8,13 @@
 #include "string.h"
 #include "stdlib.h"
 #include <arpa/inet.h>
-#include<time.h>
+#include <time.h>
+#include <signal.h>
+
 
 int users[30] = {0}; // Массив сокетов
 int count = 0; // Счетчик пользователей
+static volatile int keepRunning = true;
 
 struct args {
     int pthcount; // номер пользователя
@@ -35,7 +38,7 @@ void getTime(char *dateTime) { // Получаем текущую время и 
     strftime(dateTime, 26, "[%d-%m-%Y %H:%M:%S]", tm_info);
 }
 
-void printLogMsg(int fd, char *name, char *msg) { // Получаем ip и port пользователя
+void printUserLogMsg(int fd, char *name, char *msg) { // Получаем ip и port пользователя
     struct sockaddr_in addr;
     socklen_t addr_size = sizeof(struct sockaddr_in);
     getpeername(fd, (struct sockaddr *)&addr, &addr_size);
@@ -47,9 +50,27 @@ void printLogMsg(int fd, char *name, char *msg) { // Получаем ip и port
     fflush(stdout);
 }
 
+void printServerLogMsg(char *msg, bool removeSignal) {
+    char time[50];
+    getTime(time);
+
+    if (removeSignal) {
+        printf("\b\b");
+    }
+
+    printf("%s %s\n", time, msg);
+    fflush(stdout);
+}
+
+void intHandler(int dummy) {
+    keepRunning = false;
+    printServerLogMsg("Stopped server", true);
+    exit(0);
+}
+
 void *Connection(void *argv) {
 
-    while (true) {
+    while (keepRunning) {
         char buffer[256] = {0};
   
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
@@ -69,7 +90,7 @@ void *Connection(void *argv) {
              // Добавляем имя в буффер
             if (user->msgCount == 0) {
                 char *msg = "joined chat";
-                printLogMsg(fd, user->name, msg);
+                printUserLogMsg(fd, user->name, msg);
 
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
@@ -93,10 +114,10 @@ void *Connection(void *argv) {
             char connBuffer[strlen(msgBuff) + strlen(user->name) + 1];
 
             if(user->msgCount != 0) {
-                printLogMsg(fd, user->name, msg);
+                printUserLogMsg(fd, user->name, msg);
             } else {
                 char *name = "";
-                printLogMsg(fd, name, msg);
+                printUserLogMsg(fd, name, msg);
             }
 
             strcpy(connBuffer, user->name);
@@ -117,7 +138,7 @@ void *Connection(void *argv) {
 
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
-    while (true) {
+    while (keepRunning) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             users[count] = fd; // Добавляем в массив дескриптор
@@ -127,7 +148,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
             char *name = "\b";
             char *msg = "connected";
-            printLogMsg(fd,name,msg);
+            printUserLogMsg(fd,name,msg);
 
             struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Инициализируем структуру аргументов
 
@@ -145,6 +166,8 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 }
 
 int main() {
+    signal(SIGINT, intHandler);
+
     int server = Socket(AF_INET, SOCK_STREAM, 0); // Создаем сокет
 
     struct sockaddr_in addr = {0}; // Создаем адресс сокета
