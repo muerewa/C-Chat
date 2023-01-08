@@ -1,4 +1,4 @@
 .idea/
 cmake-build-debug/
-src/server/server
-src/server/client
+elfdir/server
+elfdir/client
