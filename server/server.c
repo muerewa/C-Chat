@@ -13,6 +13,7 @@
 
 
 int users[30] = {0}; // Массив сокетов
+char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
 
 int *serverSocket = NULL;
@@ -89,13 +90,12 @@ void *Connection(void *argv) {
 
             user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
-
             char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
 
              // Добавляем имя в буффер
             if (user->msgCount == 0) {
                 printUserLogMsg(fd, user->name, "joined chat");
-
+                nicknames[pthcount] = user->name;
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
 
@@ -107,7 +107,8 @@ void *Connection(void *argv) {
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(users[i] != fd && users[i] != 0) {
+                printServerLogMsg(nicknames[pthcount], false);
+                if(users[i] != fd && users[i] != 0 && nicknames[i] != NULL) {
                     send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
@@ -131,6 +132,7 @@ void *Connection(void *argv) {
             }
 
             users[pthcount] = 0;
+            nicknames[pthcount] = NULL;
             free(user); // Освобождаем структуру
             pthread_exit(NULL); // Выходим из потока
         }
