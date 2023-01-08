@@ -107,7 +107,6 @@ void *Connection(void *argv) {
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                printServerLogMsg(nicknames[pthcount], false);
                 if(users[i] != fd && users[i] != 0 && nicknames[i] != NULL) {
                     send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
