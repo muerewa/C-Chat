@@ -14,7 +14,6 @@
 
 int users[30] = {0}; // Массив сокетов
 int count = 0; // Счетчик пользователей
-static volatile int keepRunning = true;
 
 struct args {
     int pthcount; // номер пользователя
@@ -63,14 +62,13 @@ void printServerLogMsg(char *msg, bool removeSignal) {
 }
 
 void intHandler(int dummy) {
-    keepRunning = false;
     printServerLogMsg("Stopped server", true);
     exit(0);
 }
 
 void *Connection(void *argv) {
 
-    while (keepRunning) {
+    while (true) {
         char buffer[256] = {0};
   
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
@@ -138,7 +136,7 @@ void *Connection(void *argv) {
 
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
-    while (keepRunning) {
+    while (true) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             users[count] = fd; // Добавляем в массив дескриптор
