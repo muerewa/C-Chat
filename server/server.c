@@ -15,6 +15,8 @@
 int users[30] = {0}; // Массив сокетов
 int count = 0; // Счетчик пользователей
 
+int *serverSocket = NULL;
+
 struct args {
     int pthcount; // номер пользователя
     int fd; // файловый дескриптор
@@ -45,6 +47,10 @@ void printUserLogMsg(int fd, char *name, char *msg) { // Получаем ip и 
     char time[50];
     getTime(time);
 
+    if (name == "") {
+        name = "\b";
+    }
+
     printf("%s (%s:%d) %s %s\n", time, inet_ntoa(addr.sin_addr), htons(addr.sin_port), name, msg);
     fflush(stdout);
 }
@@ -62,6 +68,7 @@ void printServerLogMsg(char *msg, bool removeSignal) {
 }
 
 void intHandler(int dummy) {
+    close(*serverSocket);
     printServerLogMsg("Stopped server", true);
     exit(0);
 }
@@ -87,8 +94,7 @@ void *Connection(void *argv) {
 
              // Добавляем имя в буффер
             if (user->msgCount == 0) {
-                char *msg = "joined chat";
-                printUserLogMsg(fd, user->name, msg);
+                printUserLogMsg(fd, user->name, "joined chat");
 
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
@@ -107,19 +113,16 @@ void *Connection(void *argv) {
             }
             user->msgCount = 1;
         } else {
-            char *msg = "disconnected";
-            char *msgBuff = "\bdisconnected\n";
-            char connBuffer[strlen(msgBuff) + strlen(user->name) + 1];
-
-            if(user->msgCount != 0) {
-                printUserLogMsg(fd, user->name, msg);
-            } else {
-                char *name = "";
-                printUserLogMsg(fd, name, msg);
-            }
+            char connBuffer[strlen(" disconnected\n") + strlen(user->name)];
 
             strcpy(connBuffer, user->name);
             strcat(connBuffer, " disconnected\n");
+
+            if(user->msgCount != 0) {
+                printUserLogMsg(fd, user->name, "disconnected");
+            } else {
+                printUserLogMsg(fd, "", "disconnected");
+            }
 
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
@@ -144,9 +147,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int pthcount = count;
             ++count;
 
-            char *name = "\b";
-            char *msg = "connected";
-            printUserLogMsg(fd,name,msg);
+            printUserLogMsg(fd, "", "connected");
 
             struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Инициализируем структуру аргументов
 
@@ -163,10 +164,11 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     }
 }
 
-int main() {
+void main() {
     signal(SIGINT, intHandler);
 
     int server = Socket(AF_INET, SOCK_STREAM, 0); // Создаем сокет
+    serverSocket = &server;
 
     struct sockaddr_in addr = {0}; // Создаем адресс сокета
     addr.sin_family = AF_INET; // Семейство протоколов(ipv4)
@@ -178,6 +180,4 @@ int main() {
     socklen_t addrlen = sizeof addr; // Размер адреса
 
     ConnLoop(server, (struct sockaddr*) &addr, &addrlen); // Запускаем принятие пользователей
-    close(server);
-    return 0;
 }
