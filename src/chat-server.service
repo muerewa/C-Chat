@@ -1,0 +1,8 @@
+[Unit]
+Description=chat server daemon
+After=multi-user.target
+[Service]
+Type=idle
+ExecStart=/usr/bin/chat-server
+[Install]
+WantedBy=multi-user.target
