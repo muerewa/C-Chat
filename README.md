@@ -25,3 +25,7 @@ Use this command for start client:
 ```
 chat-client
 ```
+And you can start server in your terminal:
+```
+chat-server
+```
