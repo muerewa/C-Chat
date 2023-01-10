@@ -28,7 +28,7 @@ chat-server
 ```
 ### Uninstall
 ____
-For uninstalling this programm your must be:
+For uninstalling this programm your must do:
 1. Stop server service and remove it from auto start (of course if you added earlier)
     ```
     sudo systemctl disable server-chat.service
