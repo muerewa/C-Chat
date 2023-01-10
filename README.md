@@ -21,11 +21,27 @@ Stop chat server:
 ```
 sudo systemctl stop chat-server.service
 ```
-Use this command for start client:
+Use this commands for start client or server in your terminal:
 ```
 chat-client
-```
-And you can start server in your terminal:
-```
 chat-server
 ```
+### Uninstall
+____
+For uninstalling this programm your must be:
+1. Stop server service and remove it from auto start (of course if you added earlier)
+    ```
+    sudo systemctl disable server-chat.service
+    sudo systemctl stop server-chat.service
+    ```
+2. Delete daemon unit file
+    ```
+    sudo rm /etc/systemd/system/chat-server.service
+    ```
+    Also you will probably need to run ```sudo systemctl daemon-reload``` to force systemd to reread the daemons files
+3. Delete bin files from ```/usr/bin```
+    ```
+    sudo rm /usr/bin/server-chat
+    sudo rm /usr/bin/client-chat
+    ```
+Uninstalled :heavy_check_mark:
