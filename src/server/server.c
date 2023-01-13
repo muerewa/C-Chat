@@ -168,7 +168,17 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 }
 
 int main() {
+    printf("Generating keys...\n");
+    fflush(stdout);
+
     generateKeys(&key);
+
+    printf("done generating keys\n");
+    fflush(stdout);
+
+    printf("starting server...\n");
+    fflush(stdout);
+
     signal(SIGINT, intHandler);
 
     int server = Socket(AF_INET, SOCK_STREAM, 0); // Создаем сокет
@@ -182,6 +192,9 @@ int main() {
     Listen(server, 5); // Прослушваем(5 человек максимум могут находиться в очереди)
 
     socklen_t addrlen = sizeof addr; // Размер адреса
+
+    printf("server running\n");
+    fflush(stdout);
 
     ConnLoop(server, (struct sockaddr*) &addr, &addrlen); // Запускаем принятие пользователей
     return 0;
