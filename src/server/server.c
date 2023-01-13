@@ -2,6 +2,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "unistd.h"
+#include "../../include/RSA.h"
+#include "../../include/shifre.h"
 #include "../../include/wrappers.h"
 #include <pthread.h>
 #include "stdbool.h"
@@ -11,17 +13,19 @@
 #include <time.h>
 #include <signal.h>
 
-
 int users[30] = {0}; // Массив сокетов
 char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
 
 int *serverSocket = NULL;
 
+struct keys key;
+
 struct args {
     int pthcount; // номер пользователя
     int fd; // файловый дескриптор
     struct users *user; // структура пользователя
+    struct keys *key;
 }; // Аргументы для функции Connection
 
 struct users {
@@ -75,10 +79,9 @@ void intHandler(int dummy) {
 }
 
 void *Connection(void *argv) {
-
     while (true) {
         char buffer[256] = {0};
-  
+
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
@@ -139,7 +142,6 @@ void *Connection(void *argv) {
 }
 
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
-
     while (true) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
@@ -165,7 +167,8 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     }
 }
 
-void main() {
+int main() {
+    generateKeys(&key);
     signal(SIGINT, intHandler);
 
     int server = Socket(AF_INET, SOCK_STREAM, 0); // Создаем сокет
@@ -181,4 +184,5 @@ void main() {
     socklen_t addrlen = sizeof addr; // Размер адреса
 
     ConnLoop(server, (struct sockaddr*) &addr, &addrlen); // Запускаем принятие пользователей
+    return 0;
 }
