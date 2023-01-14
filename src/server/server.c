@@ -9,9 +9,10 @@
 #include "stdbool.h"
 #include "string.h"
 #include "stdlib.h"
-#include <arpa/inet.h>
-#include <time.h>
+#include "../../include/log.h"
 #include <signal.h>
+#include "../../include/handlers.h"
+#include "../../include/structures.h"
 
 int users[30] = {0}; // Массив сокетов
 char *nicknames[30] = {NULL};
@@ -27,50 +28,6 @@ struct args {
     struct users *user; // структура пользователя
     struct keys *key;
 }; // Аргументы для функции Connection
-
-struct users {
-    int fd; // файловый дескриптор
-    int msgCount; // счетчик сообщений
-    char *name; // имя пользователя
-};
-
-void getTime(char *dateTime) { // Получаем текущую время и дату
-    time_t timer;
-    struct tm* tm_info;
-
-    timer = time(NULL);
-    tm_info = localtime(&timer);
-
-    strftime(dateTime, 26, "[%d-%m-%Y %H:%M:%S]", tm_info);
-}
-
-void printUserLogMsg(int fd, char *name, char *msg) { // Получаем ip и port пользователя
-    struct sockaddr_in addr;
-    socklen_t addr_size = sizeof(struct sockaddr_in);
-    getpeername(fd, (struct sockaddr *)&addr, &addr_size);
-
-    char time[50];
-    getTime(time);
-
-    if (name == "") {
-        name = "\b";
-    }
-
-    printf("%s (%s:%d) %s %s\n", time, inet_ntoa(addr.sin_addr), htons(addr.sin_port), name, msg);
-    fflush(stdout);
-}
-
-void printServerLogMsg(char *msg, bool removeSignal) {
-    char time[50];
-    getTime(time);
-
-    if (removeSignal) {
-        printf("\b\b");
-    }
-
-    printf("%s %s\n", time, msg);
-    fflush(stdout);
-}
 
 void intHandler(int dummy) {
     close(*serverSocket);
@@ -96,12 +53,11 @@ void *Connection(void *argv) {
             char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
 
              // Добавляем имя в буффер
-            if (user->msgCount == 0) {
+            if (user->msgCount == 2) {
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
-
             } else {
                 strcpy(newBuffer, user->name);
                 strcat(newBuffer, ": ");
@@ -161,6 +117,9 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             user->fd = fd;
             user->msgCount = 0;
 
+            serverKeyHandler(user,&key,fd);
+
+            user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
             pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }

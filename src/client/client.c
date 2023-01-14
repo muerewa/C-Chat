@@ -8,6 +8,12 @@
 #include "pthread.h"
 #include "stdlib.h"
 #include "string.h"
+#include "../../include/structures.h"
+#include "../../include/RSA.h"
+#include "../../include/handlers.h"
+
+struct keys key;
+struct keys serverKeys;
 
 struct args {
     int fd;
@@ -15,29 +21,51 @@ struct args {
 
 void *readMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
+    int count = 0;
     while (1) {
-        char buffer[256] = {};
-        int valread = read(fd, buffer, 255);
-        buffer[strlen(buffer) - 1] = '\0';
-        if(valread != 0) {
-            printf("%s\n", buffer);
+        if (count == 0) {
+            int buffer;
+            if (read(fd, &buffer, sizeof(buffer)) != 0) {
+                serverKeys.e = buffer;
+            }
+        } else if (count == 1) {
+            int buffer;
+            if (read(fd, &buffer, sizeof(buffer)) != 0) {
+                serverKeys.n = buffer;
+            }
         } else {
-            printf("server error\n");
+            char buffer[256] = {};
+            int valread = read(fd, buffer, 255);
+            buffer[strlen(buffer) - 1] = '\0';
+            if (valread != 0) {
+                printf("%s\n", buffer);
+            } else {
+                printf("server error\n");
+            }
         }
+        ++count;
     }
 }
 
 void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
-
+    int count = 0;
     while (1) {
-        char buffer[256] = {0};
-        fgets(buffer, 255, stdin);
-        write(fd, buffer, strlen(buffer));
+        if (count == 0) {
+            write(fd, &key.e, sizeof(key.e));
+        } else if (count == 1) {
+            write(fd, &key.n, sizeof(key.n));
+        } else {
+            char buffer[256] = {0};
+            fgets(buffer, 255, stdin);
+            write(fd, buffer, strlen(buffer));
+        }
+        ++count;
     }
 }
 
 int main() {
+    generateKeys(&key);
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
 

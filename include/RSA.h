@@ -1,13 +1,7 @@
 #ifndef C_CHAT_RSA_H
 #define C_CHAT_RSA_H
-
-struct keys {
-    int e;
-    int d;
-    int n;
-};
+#include "structures.h"
 
 void generateKeys(struct keys *key);
-
 
 #endif

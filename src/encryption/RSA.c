@@ -4,6 +4,7 @@
 #include "../../include/RSA.h"
 #include "../../include/rsa_modules.h"
 #include "../../include/shifre.h"
+#include "../../include/structures.h"
 #include "string.h"
 
 #define MIN 1000
