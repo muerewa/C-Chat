@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include <arpa/inet.h>
 #include <time.h>
+#include <string.h>
 #include "stdbool.h"
 
 
@@ -37,7 +38,7 @@ void printUserLogMsg(int fd, char *name, char *msg) {
 
     getTime(time);
 
-    if (name == '') {
+    if (strcmp(name, "") == 0) {
         name = "\b";
     }
 

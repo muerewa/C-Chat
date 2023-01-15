@@ -15,7 +15,7 @@
 #include "../../include/structures.h"
 
 struct users usersArr[30] = {}; // Массив сокетов
-char *nicknames[30] = NULL;
+char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
 
 int *serverSocket = NULL;
