@@ -68,19 +68,22 @@ void *readMsg(void *arguments) {
  */
 void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
+    int write_result = 0;
+    char *fgets_result = NULL;
     int count = 0;
+
     while (1) {
         if (count == 0) {
-            write(fd, &key.e, sizeof(key.e));
+            write_result = write(fd, &key.e, sizeof(key.e));
         } else if (count == 1) {
-            write(fd, &key.n, sizeof(key.n));
+            write_result = write(fd, &key.n, sizeof(key.n));
         } else {
             char buffer[256] = {0};
             long encMsg[256] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            fgets(buffer, 255, stdin);
+            fgets_result = fgets(buffer, 255, stdin);
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
-            write(fd, encMsg, encMsgLen);
+            write_result = write(fd, encMsg, encMsgLen);
         }
         count++;
     }
