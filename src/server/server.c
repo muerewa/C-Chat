@@ -90,7 +90,10 @@ void *Connection(void *argv) {
 
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                    send(usersArr[i].fd , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
+                    long encMsg[256] = {0};
+                    encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
+                    encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+                    write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
                 }
             }
             nicknames[pthcount] = NULL;
