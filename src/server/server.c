@@ -47,9 +47,6 @@ void *Connection(void *argv) {
 
         decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
 
-        printf("%s", buffer);
-        fflush(stdout);
-
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
         buffer[strlen(buffer) - 1] = '\0';
 
