@@ -14,7 +14,7 @@
 #include "../../include/handlers.h"
 #include "../../include/structures.h"
 
-int users[30] = {0}; // Массив сокетов
+struct users usersArr[30] = {}; // Массив сокетов
 char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
 
@@ -38,11 +38,18 @@ void intHandler(int dummy) {
 void *Connection(void *argv) {
     while (true) {
         char buffer[256] = {0};
-
+        long encMsg[256] = {0};
+        size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
-        int valread = read(fd, buffer, 255); // Читаем сообщение
+        int valread = read(fd, encMsg, encMsgLen); // Читаем сообщение
+
+        decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
+
+        printf("%s", buffer);
+        fflush(stdout);
+
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
         buffer[strlen(buffer) - 1] = '\0';
 
@@ -51,9 +58,7 @@ void *Connection(void *argv) {
             user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
             char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
-
-             // Добавляем имя в буффер
-            if (user->msgCount == 2) {
+            if (user->msgCount == 0) {
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
                 strcpy(newBuffer, user->name);
@@ -66,8 +71,11 @@ void *Connection(void *argv) {
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(users[i] != fd && users[i] != 0 && nicknames[i] != NULL) {
-                    send(users[i] , newBuffer, strlen(newBuffer) , 0 ); // Отправляем сообщение всем кроме нас
+                if(usersArr[i].fd != fd && nicknames[i] != NULL) {
+                    long encMsg[256] = {0};
+                    encrypt(newBuffer, encMsg, usersArr[i].e, usersArr[i].n);
+                    encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+                    write(usersArr[i].fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
                 }
             }
             user->msgCount = 1;
@@ -85,11 +93,9 @@ void *Connection(void *argv) {
 
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                    send(users[i] , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
+                    send(usersArr[i].fd , connBuffer , strlen(connBuffer) , 0 ); // Отправляем сообщение всем кроме нас
                 }
             }
-
-            users[pthcount] = 0;
             nicknames[pthcount] = NULL;
             free(user); // Освобождаем структуру
             pthread_exit(NULL); // Выходим из потока
@@ -101,10 +107,8 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
-            users[count] = fd; // Добавляем в массив дескриптор
             pthread_t thread_id = count; // создаем id потока
             int pthcount = count;
-            ++count;
 
             printUserLogMsg(fd, "", "connected");
 
@@ -113,7 +117,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             Thread->pthcount = pthcount;
             Thread->fd = fd;
 
-            struct users *user = malloc(sizeof(users)); // Инициализируем структуру
+            struct users *user = malloc(sizeof(struct users)); // Инициализируем структуру
             user->fd = fd;
             user->msgCount = 0;
 
@@ -121,6 +125,8 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
+            usersArr[count] = *user; // Добавляем в массив дескриптор
+            ++count;
             pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }
     }

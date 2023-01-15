@@ -18,13 +18,13 @@ long shifre(long b, long exp, long mod) {
     return ret;
 }
 
-void encrypt(char *msg, int *buffer, int e, int n) {
+void encrypt(char *msg, long *buffer, int e, int n) {
     for (int i = 0; i < strlen(msg); ++i) {
         buffer[i] = shifre(msg[i], e, n);
     }
 }
 
-void decrypt(int *encMsg, size_t encMsgSize,char *buffer, int d, int n) {
+void decrypt(long *encMsg, size_t encMsgSize,char *buffer, int d, int n) {
     for (int i = 0; i < encMsgSize; ++i) {
         buffer[i] = shifre(encMsg[i], d, n);
     }

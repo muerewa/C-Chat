@@ -11,7 +11,7 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
             if (user->msgCount == 0) {
                 user->e = buffer;
                 write(fd, &key->e, sizeof(key->e));
-                user->msgCount += 1;
+                user->msgCount = 1;
             }
             else if (user->msgCount == 1) {
                 user->n = buffer;

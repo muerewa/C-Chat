@@ -10,6 +10,7 @@
 #include "string.h"
 #include "../../include/structures.h"
 #include "../../include/RSA.h"
+#include "../../include/shifre.h"
 #include "../../include/handlers.h"
 
 struct keys key;
@@ -35,12 +36,16 @@ void *readMsg(void *arguments) {
             }
         } else {
             char buffer[256] = {};
-            int valread = read(fd, buffer, 255);
+            long encMsg[256];
+            size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+            int valread = read(fd, encMsg, encMsgLen);
+            decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
             buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
                 printf("%s\n", buffer);
             } else {
-                printf("server error\n");
+                perror("server error\n");
+                exit(EXIT_FAILURE);
             }
         }
         ++count;
@@ -57,8 +62,11 @@ void *writeMsg(void *arguments) {
             write(fd, &key.n, sizeof(key.n));
         } else {
             char buffer[256] = {0};
+            long encMsg[256] = {0};
+            size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
             fgets(buffer, 255, stdin);
-            write(fd, buffer, strlen(buffer));
+            encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
+            write(fd, encMsg, encMsgLen);
         }
         ++count;
     }
@@ -66,6 +74,7 @@ void *writeMsg(void *arguments) {
 
 int main() {
     generateKeys(&key);
+
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
 
