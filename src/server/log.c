@@ -3,7 +3,13 @@
 #include <time.h>
 #include "stdbool.h"
 
-void getTime(char *dateTime) { // Получаем текущую время и дату
+
+/**
+ * @brief Получаем текущую время и дату
+ * 
+ * @param dateTime 
+ */
+void getTime(char *dateTime) {
     time_t timer;
     struct tm* tm_info;
 
@@ -13,15 +19,25 @@ void getTime(char *dateTime) { // Получаем текущую время и 
     strftime(dateTime, 26, "[%d-%m-%Y %H:%M:%S]", tm_info);
 }
 
-void printUserLogMsg(int fd, char *name, char *msg) { // Получаем ip и port пользователя
+
+/**
+ * @brief Получаем ip и port пользователя
+ * 
+ * @param fd 
+ * @param name 
+ * @param msg 
+ */
+void printUserLogMsg(int fd, char *name, char *msg) {
     struct sockaddr_in addr;
     socklen_t addr_size = sizeof(struct sockaddr_in);
+
     getpeername(fd, (struct sockaddr *)&addr, &addr_size);
 
-    char time[50];
+    char time[50] = {0};
+
     getTime(time);
 
-    if (name == "") {
+    if (name == '') {
         name = "\b";
     }
 
@@ -29,6 +45,13 @@ void printUserLogMsg(int fd, char *name, char *msg) { // Получаем ip и 
     fflush(stdout);
 }
 
+
+/**
+ * @brief 
+ * 
+ * @param msg 
+ * @param removeSignal 
+ */
 void printServerLogMsg(char *msg, bool removeSignal) {
     char time[50];
     getTime(time);

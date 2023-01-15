@@ -15,7 +15,7 @@
 #include "../../include/structures.h"
 
 struct users usersArr[30] = {}; // Массив сокетов
-char *nicknames[30] = {NULL};
+char *nicknames[30] = NULL;
 int count = 0; // Счетчик пользователей
 
 int *serverSocket = NULL;
@@ -29,12 +29,25 @@ struct args {
     struct keys *key;
 }; // Аргументы для функции Connection
 
+
+/**
+ * @brief 
+ * 
+ * @param dummy 
+ */
 void intHandler(int dummy) {
     close(*serverSocket);
     printServerLogMsg("Stopped server", true);
     exit(0);
 }
 
+
+/**
+ * @brief 
+ * 
+ * @param argv 
+ * @return void* 
+ */
 void *Connection(void *argv) {
     while (true) {
         char buffer[256] = {0};
@@ -103,6 +116,14 @@ void *Connection(void *argv) {
     }
 }
 
+
+/**
+ * @brief 
+ * 
+ * @param server 
+ * @param addr 
+ * @param addrlen 
+ */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
         if(count <= 30) {
@@ -132,7 +153,13 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     }
 }
 
-int main() {
+
+/**
+ * @brief 
+ * 
+ * @return int 
+ */
+int main(int argc, char **argv) {
     printf("Generating keys...\n");
     fflush(stdout);
 

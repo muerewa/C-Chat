@@ -2,3 +2,5 @@
 cmake-build-debug/
 elfdir/server
 elfdir/client
+chat-server
+chat-client

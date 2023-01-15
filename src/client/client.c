@@ -20,6 +20,13 @@ struct args {
     int fd;
 };
 
+
+/**
+ * @brief 
+ * 
+ * @param arguments 
+ * @return void* 
+ */
 void *readMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
@@ -48,10 +55,17 @@ void *readMsg(void *arguments) {
                 exit(EXIT_FAILURE);
             }
         }
-        ++count;
+        count++;
     }
 }
 
+
+/**
+ * @brief 
+ * 
+ * @param arguments 
+ * @return void* 
+ */
 void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
@@ -68,11 +82,19 @@ void *writeMsg(void *arguments) {
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
         }
-        ++count;
+        count++;
     }
 }
 
-int main() {
+
+/**
+ * @brief 
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
+int main(int argc, char **argv) {
     generateKeys(&key);
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
@@ -91,5 +113,6 @@ int main() {
     pthread_create(&thread_id, NULL, writeMsg, (void *)arguments);
     pthread_create(&thread_id, NULL, readMsg, (void *)arguments);
     pthread_join(thread_id, NULL);
+
     return 0;
 }

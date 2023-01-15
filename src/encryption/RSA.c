@@ -13,6 +13,13 @@
 int primeNums[MAX] = {0};
 int n = 0;
 
+
+/**
+ * @brief 
+ * 
+ * @param fi 
+ * @return long 
+ */
 static long	pick_e(long fi) {
     for (long i = 0; i < n; i++)
     {
@@ -23,6 +30,11 @@ static long	pick_e(long fi) {
     return 0;
 }
 
+
+/**
+ * @brief 
+ * 
+ */
 void fill() {
     for (int i = MIN; i < MAX; ++i) {
         if(is_prime(i)) {
@@ -32,11 +44,23 @@ void fill() {
     }
 }
 
+
+/**
+ * @brief 
+ * 
+ * @return int 
+ */
 int generateKey() {
     srand(time(NULL));
     return primeNums[rand() % n];
 }
 
+
+/**
+ * @brief 
+ * 
+ * @param key 
+ */
 void generateKeys(struct keys *key) {
     fill();
     int p, q, e, d = 0;
