@@ -104,12 +104,15 @@ void *Connection(void *argv) {
 
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                    long encMsg[256] = {0};
-                    encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
-                    encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                    write_result = write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
+                    if(usersArr[i].fd != fd && nicknames[i] != NULL) {
+                        long encMsg[256] = {0};
+                        encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
+                        encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+                        write_result = write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
+                    }
                 }
             }
+            fflush(stdout);
             nicknames[pthcount] = NULL;
             free(user); // Освобождаем структуру
             pthread_exit(NULL); // Выходим из потока
