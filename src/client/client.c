@@ -98,7 +98,14 @@ void *writeMsg(void *arguments) {
  * @return int 
  */
 int main(int argc, char **argv) {
+
+    printf("Generating keys...\n");
+    fflush(stdout);
+
     generateKeys(&key);
+
+    printf("done generating keys\n");
+    fflush(stdout);
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
