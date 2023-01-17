@@ -10,7 +10,7 @@
  * @return long 
  */
 long gcd(long a, long b) {
-    if (b) {
+    if (!b) {
         return a;
     }
     
