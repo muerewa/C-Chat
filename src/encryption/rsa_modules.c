@@ -46,9 +46,9 @@ char is_prime(long number) {
  * @param c 
  * @return int 
  */
-int modular_inverse(int a, int c) {
+long modular_inverse(int a, long c) {
     a %= c;
-    for (int i = 1; i < c; i++)
+    for (long i = 1; i < c; i++)
     {
         if ((a * i) % c == 1)
             return i;

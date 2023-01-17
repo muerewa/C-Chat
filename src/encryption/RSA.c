@@ -65,7 +65,7 @@ void generateKeys(struct keys *key) {
     fill();
     int p, q, e, d = 0;
     long fi, n;
-    while (d == 0) {
+    while (d == 0 || e == 0) {
         p = generateKey();
         q = generateKey();
         while (p == q) {
@@ -73,9 +73,11 @@ void generateKeys(struct keys *key) {
         }
         fi = (p - 1)*(q - 1);
         e = pick_e(fi);
-        d = (long)modular_inverse(e, fi);
+        d = modular_inverse(e, fi);
     }
+
     n = p * q;
+
     key->n = n;
     key->e = e;
     key->d = d;

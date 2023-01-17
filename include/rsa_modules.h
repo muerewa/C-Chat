@@ -2,7 +2,7 @@
 #define C_CHAT_RSA_MODULES_H
 
 long gcd(long a, long b);
-int modular_inverse(int a, int c);
+long modular_inverse(int a, long c);
 char is_prime(long number);
 
 #endif
