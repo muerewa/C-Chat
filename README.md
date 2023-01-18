@@ -1,6 +1,6 @@
 ### Description
 ____
-Simple terminal chat written in C using sockets
+Simple terminal chat written in C using sockets for linux
 ### Install
 ____
 Build server and chat:
