@@ -13,6 +13,9 @@
 #include "../../include/shifre.h"
 #include "../../include/handlers.h"
 
+#define MSGLEN 2048
+
+
 struct keys key;
 struct keys serverKeys;
 
@@ -42,8 +45,8 @@ void *readMsg(void *arguments) {
                 serverKeys.n = buffer;
             }
         } else {
-            char buffer[256] = {};
-            long encMsg[256];
+            char buffer[MSGLEN] = {};
+            long encMsg[MSGLEN];
             size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
             int valread = read(fd, encMsg, encMsgLen);
             decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
@@ -76,10 +79,10 @@ void *writeMsg(void *arguments) {
         } else if (count == 1) {
             write(fd, &key.n, sizeof(key.n));
         } else {
-            char buffer[256] = {0};
-            long encMsg[256] = {0};
+            char buffer[MSGLEN] = {0};
+            long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            fgets(buffer, 255, stdin);
+            fgets(buffer, MSGLEN - 1, stdin);
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
         }

@@ -14,6 +14,8 @@
 #include "../../include/handlers.h"
 #include "../../include/structures.h"
 
+#define MSGLEN 2048
+
 struct users usersArr[30] = {}; // Массив сокетов
 char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
@@ -50,8 +52,8 @@ void intHandler(int dummy) {
  */
 void *Connection(void *argv) {
     while (true) {
-        char buffer[256] = {0};
-        long encMsg[256] = {0};
+        char buffer[MSGLEN] = {0};
+        long encMsg[MSGLEN] = {0};
         size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
 
@@ -82,7 +84,7 @@ void *Connection(void *argv) {
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                    long encMsg[256] = {0};
+                    long encMsg[MSGLEN] = {0};
                     encrypt(newBuffer, encMsg, usersArr[i].e, usersArr[i].n);
                     encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
                     write(usersArr[i].fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
@@ -104,7 +106,7 @@ void *Connection(void *argv) {
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                     if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                        long encMsg[256] = {0};
+                        long encMsg[MSGLEN] = {0};
                         encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
                         encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
                         write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
