@@ -57,7 +57,6 @@ void *Connection(void *argv) {
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
         int valread = read(fd, encMsg, encMsgLen); // Читаем сообщение
-        int write_result = 0;
 
         decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
 
@@ -86,7 +85,7 @@ void *Connection(void *argv) {
                     long encMsg[256] = {0};
                     encrypt(newBuffer, encMsg, usersArr[i].e, usersArr[i].n);
                     encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                    write_result = write(usersArr[i].fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
+                    write(usersArr[i].fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
                 }
             }
             user->msgCount = 1;
@@ -108,7 +107,7 @@ void *Connection(void *argv) {
                         long encMsg[256] = {0};
                         encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
                         encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                        write_result = write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
+                        write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
                     }
                 }
             }
