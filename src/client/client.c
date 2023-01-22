@@ -73,7 +73,7 @@ void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
 
-    while (1) {
+    while (getch() != 27) {
         if (count == 0) {
             write(fd, &key.e, sizeof(key.e));
         } else if (count == 1) {
