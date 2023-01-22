@@ -52,7 +52,11 @@ void *readMsg(void *arguments) {
             decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
             buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
+                attron(COLOR_PAIR(1));
+                printLogMsg("> ");
                 printLogMsg(buffer);
+                printLogMsg("\n");
+                attron(COLOR_PAIR(2));
             } else {
                 perror("server error\n");
                 exit(EXIT_FAILURE);
@@ -73,7 +77,7 @@ void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
 
-    while (getch() != 27) {
+    while (1) {
         if (count == 0) {
             write(fd, &key.e, sizeof(key.e));
         } else if (count == 1) {
@@ -101,12 +105,17 @@ void *writeMsg(void *arguments) {
 int main(int argc, char **argv) {
 
     initscr();
+    start_color();
+    use_default_colors();
 
-    printLogMsg("Generating keys...");
+    init_pair(1, COLOR_GREEN, -1); // Зеленый цвет
+    init_pair(2, -1, -1); // Дефолтный цвет
+
+    printLogMsg("Generating keys...\n");
 
     generateKeys(&key);
 
-    printLogMsg("done generating keys");
+    printLogMsg("done generating keys\n");
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
