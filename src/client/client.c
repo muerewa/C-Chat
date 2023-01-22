@@ -7,11 +7,11 @@
 #include "sys/types.h"
 #include "pthread.h"
 #include "stdlib.h"
-#include "string.h"
 #include "../../include/structures.h"
 #include "../../include/RSA.h"
 #include "../../include/shifre.h"
-#include "../../include/handlers.h"
+#include "../../include/graphics.h"
+#include "ncurses.h"
 
 #define MSGLEN 2048
 
@@ -25,10 +25,10 @@ struct args {
 
 
 /**
- * @brief 
- * 
- * @param arguments 
- * @return void* 
+ * @brief
+ *
+ * @param arguments
+ * @return void*
  */
 void *readMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
@@ -52,7 +52,7 @@ void *readMsg(void *arguments) {
             decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
             buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
-                printf("%s\n", buffer);
+                printLogMsg(buffer);
             } else {
                 perror("server error\n");
                 exit(EXIT_FAILURE);
@@ -64,10 +64,10 @@ void *readMsg(void *arguments) {
 
 
 /**
- * @brief 
- * 
- * @param arguments 
- * @return void* 
+ * @brief
+ *
+ * @param arguments
+ * @return void*
  */
 void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
@@ -79,10 +79,10 @@ void *writeMsg(void *arguments) {
         } else if (count == 1) {
             write(fd, &key.n, sizeof(key.n));
         } else {
-            char buffer[MSGLEN] = {0};
+            char buffer[MSGLEN];
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            fgets(buffer, MSGLEN - 1, stdin);
+            getnstr(buffer, MSGLEN);
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
         }
@@ -92,21 +92,21 @@ void *writeMsg(void *arguments) {
 
 
 /**
- * @brief 
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @brief
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv) {
 
-    printf("Generating keys...\n");
-    fflush(stdout);
+    initscr();
+
+    printLogMsg("Generating keys...");
 
     generateKeys(&key);
 
-    printf("done generating keys\n");
-    fflush(stdout);
+    printLogMsg("done generating keys");
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
@@ -124,6 +124,8 @@ int main(int argc, char **argv) {
     pthread_create(&thread_id, NULL, writeMsg, (void *)arguments);
     pthread_create(&thread_id, NULL, readMsg, (void *)arguments);
     pthread_join(thread_id, NULL);
+
+    endwin();
 
     return 0;
 }

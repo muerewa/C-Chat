@@ -63,7 +63,6 @@ void *Connection(void *argv) {
         decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
-        buffer[strlen(buffer) - 1] = '\0';
 
         if(valread != 0) { // Слушаем сообщения
 
@@ -123,11 +122,11 @@ void *Connection(void *argv) {
 
 
 /**
- * @brief 
- * 
- * @param server 
- * @param addr 
- * @param addrlen 
+ * @brief
+ *
+ * @param server
+ * @param addr
+ * @param addrlen
  */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
@@ -160,11 +159,12 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
 
 /**
- * @brief 
- * 
- * @return int 
+ * @brief
+ *
+ * @return int
  */
 int main(int argc, char **argv) {
+
     printf("Generating keys...\n");
     fflush(stdout);
 
