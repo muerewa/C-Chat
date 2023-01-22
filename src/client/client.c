@@ -58,8 +58,9 @@ void *readMsg(void *arguments) {
                 printLogMsg("\n");
                 attron(COLOR_PAIR(2));
             } else {
-                perror("server error\n");
-                exit(EXIT_FAILURE);
+                printLogMsg("Server error...\n");
+                printLogMsg("Exiting...\n");
+                exit(0);
             }
         }
         count++;
