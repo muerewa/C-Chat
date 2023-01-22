@@ -84,12 +84,14 @@ void *writeMsg(void *arguments) {
         } else if (count == 1) {
             write(fd, &key.n, sizeof(key.n));
         } else {
+            attron(count == 2 ? attron(COLOR_PAIR(3)) : attron(COLOR_PAIR(2)));
             char buffer[MSGLEN];
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
             getnstr(buffer, MSGLEN);
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
+            attron(COLOR_PAIR(2));
         }
         count++;
     }
@@ -111,6 +113,7 @@ int main(int argc, char **argv) {
 
     init_pair(1, COLOR_GREEN, -1); // Зеленый цвет
     init_pair(2, -1, -1); // Дефолтный цвет
+    init_pair(3, COLOR_MAGENTA, -1); // Розовый цвет
 
     printLogMsg("Generating keys...\n");
 
@@ -118,7 +121,9 @@ int main(int argc, char **argv) {
 
     printLogMsg("done generating keys\n");
 
+    attron(COLOR_PAIR(3));
     printLogMsg("Enter username: ");
+    attron(COLOR_PAIR(2));
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
