@@ -12,6 +12,7 @@
 #include "../../include/shifre.h"
 #include "../../include/graphics.h"
 #include "ncurses.h"
+#include <signal.h>
 
 #define MSGLEN 2048
 
@@ -25,7 +26,6 @@ char name[MSGLEN];
 struct args {
     int fd;
 };
-
 
 /**
  * @brief
@@ -132,9 +132,10 @@ void *writeMsg(void *arguments) {
 int main(int argc, char **argv) {
 
     initscr();
+    refresh();
     start_color();
     use_default_colors();
-    refresh();
+    keypad(stdscr,TRUE);
 
     init_pair(1, COLOR_GREEN, -1); // Зеленый цвет
     init_pair(2, -1, -1); // Дефолтный цвет

@@ -13,3 +13,4 @@ void printLogMsg(WINDOW *win,char *msg) {
     wprintw(win, "%s", msg);
     wrefresh(win);
 }
+
