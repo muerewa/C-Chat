@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
     init_pair(3, COLOR_MAGENTA, -1); // Розовый цвет
 
     chat = create_newwin(LINES - 2, COLS, 0, 0);
+    scrollok(chat,TRUE);
 
     wattron(chat,COLOR_PAIR(1));
     wborder(chat, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
