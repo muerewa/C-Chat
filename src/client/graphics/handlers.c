@@ -20,6 +20,12 @@ void printLogMsg(WINDOW *win,char *msg) {
     wrefresh(win);
 }
 
+void printHelp(WINDOW *print, WINDOW *clear) {
+    printLogMsg(print, "\n:help - get help\n");
+    printLogMsg(print, ":q - exit program\n");
+    wclear(clear);
+}
+
 void initNcurses() {
     initscr();
     refresh();
@@ -30,4 +36,5 @@ void initNcurses() {
     init_pair(1, COLOR_GREEN, -1); // Зеленый цвет
     init_pair(2, -1, -1); // Дефолтный цвет
     init_pair(3, COLOR_MAGENTA, -1); // Розовый цвет
+    init_pair(4, COLOR_CYAN, -1); // Синий цвет
 }

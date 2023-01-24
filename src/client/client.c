@@ -103,6 +103,9 @@ void *writeMsg(void *arguments) {
             wgetstr(input, buffer);
             if (!strcmp(buffer, ":q")) {
                 exit(0);
+            } else if (!strcmp(buffer, ":help")) {
+                printHelp(chat, input);
+                continue;
             }
             count == 2 ? strcpy(name, buffer) : "";
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
@@ -145,6 +148,10 @@ int main(int argc, char **argv) {
     generateKeys(&key);
 
     printLogMsg(chat, "done generating keys\n");
+
+    wattron(chat,COLOR_PAIR(4));
+    printLogMsg(chat, "Welcome to C-Chat!\n\t \":help\" to get more information \n");
+    wattron(chat, COLOR_PAIR(2));
 
     wattron(chat,COLOR_PAIR(3));
     printLogMsg(chat, "Enter username: ");
