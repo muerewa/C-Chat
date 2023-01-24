@@ -4,6 +4,12 @@
 WINDOW *create_newwin(int height, int width, int starty, int startx) {
     WINDOW *local_win;
     local_win = newwin(height, width, starty, startx);
+
+    wattron(local_win,COLOR_PAIR(1));
+    box(local_win, 0, 0 );
+    wborder(local_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
+    wattroff(local_win, COLOR_PAIR(1));
+
     wrefresh(local_win);
 
     return local_win;
@@ -14,3 +20,14 @@ void printLogMsg(WINDOW *win,char *msg) {
     wrefresh(win);
 }
 
+void initNcurses() {
+    initscr();
+    refresh();
+    start_color();
+    use_default_colors();
+    keypad(stdscr,TRUE);
+
+    init_pair(1, COLOR_GREEN, -1); // Зеленый цвет
+    init_pair(2, -1, -1); // Дефолтный цвет
+    init_pair(3, COLOR_MAGENTA, -1); // Розовый цвет
+}

@@ -1,4 +1,3 @@
-#include "stdio.h"
 #include "../../include/wrappers.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -92,8 +91,6 @@ void *writeMsg(void *arguments) {
             char buffer[MSGLEN];
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            wmove(input, 0, 0);
-            wrefresh(input);
             if (count <= 2) {
                 wattron(input, COLOR_PAIR(2));
                 printLogMsg(input, "[user]: ");
@@ -109,10 +106,12 @@ void *writeMsg(void *arguments) {
             write(fd, encMsg, encMsgLen);
             strcat(buffer, "\n");
             printLogMsg(chat, buffer);
+
             wattron(input, COLOR_PAIR(2));
             wattron(chat, COLOR_PAIR(2));
+
+            refresh();
             wclear(input);
-            wrefresh(input);
         }
         count++;
     }
@@ -129,26 +128,16 @@ void *writeMsg(void *arguments) {
 int main(int argc, char **argv) {
 
     setlocale(LC_CTYPE, "");
-
-    initscr();
-    refresh();
-    start_color();
-    use_default_colors();
-    keypad(stdscr,TRUE);
-
-    init_pair(1, COLOR_GREEN, -1); // Зеленый цвет
-    init_pair(2, -1, -1); // Дефолтный цвет
-    init_pair(3, COLOR_MAGENTA, -1); // Розовый цвет
+    initNcurses();
 
     chat = create_newwin(LINES - 2, COLS, 0, 0);
     scrollok(chat,TRUE);
 
-    wattron(chat,COLOR_PAIR(1));
-    wborder(chat, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
-    wattroff(chat, COLOR_PAIR(1));
+    wrefresh(chat);
 
     input = create_newwin(2, COLS, LINES - 2, 0);
     printLogMsg(chat, "Generating keys...\n");
+    wrefresh(input);
 
     generateKeys(&key);
 
