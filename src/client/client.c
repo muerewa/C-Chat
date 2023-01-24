@@ -101,6 +101,9 @@ void *writeMsg(void *arguments) {
                 printLogMsg(input, "]: ");
             }
             wgetstr(input, buffer);
+            if (!strcmp(buffer, ":q")) {
+                exit(0);
+            }
             count == 2 ? strcpy(name, buffer) : "";
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
