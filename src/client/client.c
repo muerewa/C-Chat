@@ -12,7 +12,7 @@
 #include "../../include/shifre.h"
 #include "../../include/graphics.h"
 #include "ncurses.h"
-#include <signal.h>
+#include "locale.h"
 
 #define MSGLEN 2048
 
@@ -130,6 +130,8 @@ void *writeMsg(void *arguments) {
  * @return int
  */
 int main(int argc, char **argv) {
+
+    setlocale(LC_CTYPE, "");
 
     initscr();
     refresh();
