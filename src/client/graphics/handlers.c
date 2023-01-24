@@ -21,6 +21,7 @@ void printLogMsg(WINDOW *win,char *msg) {
 }
 
 void printHelp(WINDOW *print, WINDOW *clear) {
+    attron(COLOR_PAIR(2));
     printLogMsg(print, "\n:help - get help\n");
     printLogMsg(print, ":q - exit program\n");
     wclear(clear);

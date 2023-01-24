@@ -92,6 +92,11 @@ void *writeMsg(void *arguments) {
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
             if (count <= 2) {
+
+                wattron(chat,COLOR_PAIR(3));
+                printLogMsg(chat, "Enter username: ");
+                wattron(chat, COLOR_PAIR(2));
+
                 wattron(input, COLOR_PAIR(2));
                 printLogMsg(input, "[user]: ");
                 wattron(input, COLOR_PAIR(3));
@@ -151,10 +156,6 @@ int main(int argc, char **argv) {
 
     wattron(chat,COLOR_PAIR(4));
     printLogMsg(chat, "Welcome to C-Chat!\n\t \":help\" to get more information \n");
-    wattron(chat, COLOR_PAIR(2));
-
-    wattron(chat,COLOR_PAIR(3));
-    printLogMsg(chat, "Enter username: ");
     wattron(chat, COLOR_PAIR(2));
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
