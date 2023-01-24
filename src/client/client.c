@@ -94,19 +94,16 @@ void *writeMsg(void *arguments) {
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
             wmove(input, 0, 0);
             wrefresh(input);
-            int margin;
             if (count <= 2) {
                 wattron(input, COLOR_PAIR(2));
                 printLogMsg(input, "[user]: ");
-                margin = strlen("[user]: ");
                 wattron(input, COLOR_PAIR(3));
             } else {
                 printLogMsg(input, "[");
                 printLogMsg(input, name);
                 printLogMsg(input, "]: ");
-                margin = strlen(name) + 4;
             }
-            mvwgetnstr(input, 0, margin, buffer, MSGLEN);
+            wgetstr(input, buffer);
             count == 2 ? strcpy(name, buffer) : "";
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
