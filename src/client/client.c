@@ -120,8 +120,6 @@ void *writeMsg(void *arguments) {
 
             wattron(input, COLOR_PAIR(2));
             wattron(chat, COLOR_PAIR(2));
-
-            refresh();
             wclear(input);
         }
         count++;
@@ -140,7 +138,6 @@ int main(int argc, char **argv) {
 
     setlocale(LC_CTYPE, "");
     initNcurses();
-
     chat = create_newwin(LINES - 2, COLS, 0, 0);
     scrollok(chat,TRUE);
 
