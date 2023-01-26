@@ -121,6 +121,7 @@ void *writeMsg(void *arguments) {
             wattron(input, COLOR_PAIR(2));
             wattron(chat, COLOR_PAIR(2));
             wclear(input);
+            updateBorder(input);
         }
         count++;
     }

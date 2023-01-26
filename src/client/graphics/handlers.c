@@ -5,6 +5,8 @@ WINDOW *create_newwin(int height, int width, int starty, int startx) {
     WINDOW *local_win;
     local_win = newwin(height, width, starty, startx);
 
+    wrefresh(local_win);
+
     wattron(local_win,COLOR_PAIR(1));
     wborder(local_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
     wrefresh(local_win);
@@ -38,4 +40,10 @@ void initNcurses() {
     init_pair(2, -1, -1); // Дефолтный цвет
     init_pair(3, COLOR_MAGENTA, -1); // Розовый цвет
     init_pair(4, COLOR_CYAN, -1); // Синий цвет
+}
+
+void updateBorder(WINDOW *local_win) {
+    wattron(local_win,COLOR_PAIR(1));
+    wborder(local_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
+    wrefresh(local_win);
 }
