@@ -88,7 +88,7 @@ void *writeMsg(void *arguments) {
         } else {
             wattron(input,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
             wattron(chat,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
-            char buffer[MSGLEN];
+            char buffer[MSGLEN] = {0};
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
             if (count <= 2) {
@@ -105,7 +105,16 @@ void *writeMsg(void *arguments) {
                 printLogMsg(input, name);
                 printLogMsg(input, "]: ");
             }
-            wgetstr(input, buffer);
+            int i = 0;
+            char key;
+            while ((key = wgetch(input)) != 10) {
+                if (key == 27) {
+                    exit(0);
+                } else {
+                    buffer[i] = key;
+                }
+                i++;
+            }
             if (!strcmp(buffer, ":q")) {
                 exit(0);
             } else if (!strcmp(buffer, ":help")) {
