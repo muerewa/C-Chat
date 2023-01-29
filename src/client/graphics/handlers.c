@@ -7,13 +7,6 @@ WINDOW *create_newwin(int height, int width, int starty, int startx) {
 
     wrefresh(local_win);
 
-    wattron(local_win,COLOR_PAIR(1));
-    wborder(local_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
-    wrefresh(local_win);
-    wattroff(local_win, COLOR_PAIR(1));
-
-    wrefresh(local_win);
-
     return local_win;
 }
 
@@ -44,6 +37,23 @@ void initNcurses() {
 
 void updateBorder(WINDOW *local_win) {
     wattron(local_win,COLOR_PAIR(1));
-    wborder(local_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
+    box(local_win, 1, 0);
+    wborder(local_win, ' ', ' ', '-', '-', '-', '-', '-', '-');
     wrefresh(local_win);
+}
+
+void msgInit(WINDOW *chat, WINDOW *input, int count, char *name) {
+    if (count <= 2) {
+        wattron(chat,COLOR_PAIR(3));
+        printLogMsg(chat, "Enter username: ");
+        wattron(chat, COLOR_PAIR(2));
+
+        wattron(input, COLOR_PAIR(2));
+        printLogMsg(input, "[user]: ");
+        wattron(input, COLOR_PAIR(3));
+    } else {
+        printLogMsg(input, "[");
+        printLogMsg(input, name);
+        printLogMsg(input, "]: ");
+    }
 }

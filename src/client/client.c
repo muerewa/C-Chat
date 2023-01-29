@@ -32,6 +32,7 @@ struct args {
  * @param arguments
  * @return void*
  */
+
 void *readMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
@@ -88,36 +89,30 @@ void *writeMsg(void *arguments) {
         } else {
             wattron(input,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
             wattron(chat,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
-            char buffer[MSGLEN] = {0};
+            char buffer[MSGLEN] = "";
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            if (count <= 2) {
+            msgInit(chat, input, count, name);
 
-                wattron(chat,COLOR_PAIR(3));
-                printLogMsg(chat, "Enter username: ");
-                wattron(chat, COLOR_PAIR(2));
-
-                wattron(input, COLOR_PAIR(2));
-                printLogMsg(input, "[user]: ");
-                wattron(input, COLOR_PAIR(3));
-            } else {
-                printLogMsg(input, "[");
-                printLogMsg(input, name);
-                printLogMsg(input, "]: ");
-            }
-            int i = 0;
-            char key;
+            int key, j = 0;
             while ((key = wgetch(input)) != 10) {
-                if (key == 27) {
-                    exit(0);
-                } else {
-                    buffer[i] = key;
+                if (key == KEY_RESIZE) {
+                    wrefresh(chat);
+                    wclear(input);
+                    wrefresh(input);
+                    delwin(input);
+                    input = create_newwin(2, COLS, LINES - 2, 0);
+                    wrefresh(input);
+                    wresize(chat, LINES, COLS);
+                    wrefresh(chat);
+                    msgInit(chat, input, count, name);
+                    refresh();
+                }else {
+                    buffer[j] = key;
+                    j++;
                 }
-                i++;
             }
-            if (!strcmp(buffer, ":q")) {
-                exit(0);
-            } else if (!strcmp(buffer, ":help")) {
+            if (!strcmp(buffer, ":help")) {
                 printHelp(chat, input);
                 continue;
             }
@@ -126,11 +121,8 @@ void *writeMsg(void *arguments) {
             write(fd, encMsg, encMsgLen);
             strcat(buffer, "\n");
             printLogMsg(chat, buffer);
-
-            wattron(input, COLOR_PAIR(2));
-            wattron(chat, COLOR_PAIR(2));
             wclear(input);
-            updateBorder(input);
+            wrefresh(input);
         }
         count++;
     }
@@ -151,11 +143,10 @@ int main(int argc, char **argv) {
     chat = create_newwin(LINES - 2, COLS, 0, 0);
     scrollok(chat,TRUE);
 
-    wrefresh(chat);
+    input = create_newwin(3, COLS, LINES - 3, 0);
+    keypad(input, true);
 
-    input = create_newwin(2, COLS, LINES - 2, 0);
     printLogMsg(chat, "Generating keys...\n");
-    wrefresh(input);
 
     generateKeys(&key);
 
