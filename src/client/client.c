@@ -107,7 +107,11 @@ void *writeMsg(void *arguments) {
                     wrefresh(chat);
                     msgInit(chat, input, count, name);
                     refresh();
-                }else {
+                } else if (key == KEY_BACKSPACE) {
+                    wdelch(input);
+                    j--;
+                    buffer[j] = 0;
+                } else {
                     buffer[j] = key;
                     j++;
                 }
