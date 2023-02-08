@@ -40,19 +40,19 @@ void *readMsg(void *arguments) {
         if (count == 0) {
             int buffer;
             if (read(fd, &buffer, sizeof(buffer)) != 0) {
-                serverKeys.e = buffer;
+                serverKeys.exp = buffer;
             }
         } else if (count == 1) {
             int buffer;
             if (read(fd, &buffer, sizeof(buffer)) != 0) {
-                serverKeys.n = buffer;
+                serverKeys.mod = buffer;
             }
         } else {
             char buffer[MSGLEN] = {};
             long encMsg[MSGLEN];
             size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
             int valread = read(fd, encMsg, encMsgLen);
-            decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
+            decrypt(encMsg, encMsgLen, buffer,key.deshifre, key.mod);
             buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
                 wattron(chat,COLOR_PAIR(1));
@@ -83,9 +83,9 @@ void *writeMsg(void *arguments) {
 
     while (1) {
         if (count == 0) {
-            write(fd, &key.e, sizeof(key.e));
+            write(fd, &key.exp, sizeof(key.exp));
         } else if (count == 1) {
-            write(fd, &key.n, sizeof(key.n));
+            write(fd, &key.mod, sizeof(key.mod));
         } else {
             wattron(input,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
             wattron(chat,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
@@ -113,7 +113,7 @@ void *writeMsg(void *arguments) {
                 continue;
             }
             count == 2 ? strcpy(name, buffer) : "";
-            encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
+            encrypt(buffer, encMsg, serverKeys.exp, serverKeys.mod);
             write(fd, encMsg, encMsgLen);
             strcat(buffer, "\n");
             printLogMsg(chat, buffer);
@@ -163,6 +163,8 @@ int main(int argc, char **argv) {
     arguments->fd = client;
 
     Connectfd(client, (struct sockaddr *)&addr, sizeof addr);
+
+    use_window(chat, (NCURSES_WINDOW_CB) writeMsg, (void *)arguments);
 
     pthread_t thread_id;
     pthread_create(&thread_id, NULL, writeMsg, (void *)arguments);

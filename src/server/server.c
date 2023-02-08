@@ -66,7 +66,7 @@ void *Connection(void *argv) {
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
         int valread = read(fd, encMsg, encMsgLen); // Читаем сообщение
 
-        decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
+        decrypt(encMsg, encMsgLen, buffer, key.deshifre, key.mod);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
 
@@ -81,7 +81,7 @@ void *Connection(void *argv) {
                 strcat(helloMsg, "!\n");
 
                 long encMsg[MSGLEN] = {0};
-                encrypt(helloMsg, encMsg, user->e, user->n);
+                encrypt(helloMsg, encMsg, user->exp, user->mod);
                 encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
                 write(fd, encMsg, encMsgLen);
 
@@ -99,7 +99,7 @@ void *Connection(void *argv) {
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(usersArr[i]->fd != fd && nicknames[i] != NULL) {
                     long encMsg[MSGLEN] = {0};
-                    encrypt(newBuffer, encMsg, usersArr[i]->e, usersArr[i]->n);
+                    encrypt(newBuffer, encMsg, usersArr[i]->exp, usersArr[i]->mod);
                     encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
                     write(usersArr[i]->fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
                 }
@@ -121,7 +121,7 @@ void *Connection(void *argv) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                     if(usersArr[i]->fd != fd && nicknames[i] != NULL) {
                         long encMsg[MSGLEN] = {0};
-                        encrypt(connBuffer, encMsg, usersArr[i]->e, usersArr[i]->n);
+                        encrypt(connBuffer, encMsg, usersArr[i]->exp, usersArr[i]->mod);
                         encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
                         write(usersArr[i]->fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
                     }
