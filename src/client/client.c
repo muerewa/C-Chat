@@ -96,10 +96,7 @@ void *writeMsg(void *arguments) {
 
             int key, j = 0;
             while ((key = wgetch(input)) != 10) {
-                if (key == KEY_RESIZE) {
-                    wclear(input);
-                    wrefresh(input);
-                } else if (key == KEY_BACKSPACE) {
+                if (key == KEY_BACKSPACE) {
                     wdelch(input);
                     j--;
                     buffer[j] = 0;
@@ -163,8 +160,6 @@ int main(int argc, char **argv) {
     arguments->fd = client;
 
     Connectfd(client, (struct sockaddr *)&addr, sizeof addr);
-
-    use_window(chat, (NCURSES_WINDOW_CB) writeMsg, (void *)arguments);
 
     pthread_t thread_id;
     pthread_create(&thread_id, NULL, writeMsg, (void *)arguments);
