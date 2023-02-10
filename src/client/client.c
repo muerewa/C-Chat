@@ -92,6 +92,19 @@ void *writeMsg(void *arguments) {
                 printf("%s",RESET);
             }
             fgets(buffer, MSGLEN, stdin);
+
+            if (!strcmp(buffer, ":help\n")) {
+                printf("%s", MAGENTA);
+                printf("\t:help to get help\n");
+                printf("%s", RESET);
+                fflush(stdout);
+                if (count == 2) {
+                    printf("Enter username: ");
+                    fflush(stdout);
+                }
+                continue;
+            }
+
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
         }
