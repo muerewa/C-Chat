@@ -7,11 +7,10 @@
 #include "sys/types.h"
 #include "pthread.h"
 #include "stdlib.h"
-#include "string.h"
 #include "../../include/structures.h"
 #include "../../include/RSA.h"
 #include "../../include/shifre.h"
-#include "../../include/handlers.h"
+#include "../../include/clientHandlers.h"
 
 #define MSGLEN 2048
 
@@ -93,11 +92,7 @@ void *writeMsg(void *arguments) {
             }
             fgets(buffer, MSGLEN, stdin);
 
-            if (!strcmp(buffer, ":help\n")) {
-                printf("%s", MAGENTA);
-                printf("\t:help to get help\n");
-                printf("%s", RESET);
-                fflush(stdout);
+            if (helpHandler(buffer, MAGENTA, RESET)) {
                 if (count == 2) {
                     printf("Enter username: ");
                     fflush(stdout);

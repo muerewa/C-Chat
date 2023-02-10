@@ -11,7 +11,7 @@
 #include "stdlib.h"
 #include "../../include/log.h"
 #include <signal.h>
-#include "../../include/handlers.h"
+#include "../../include/serverHandlers.h"
 #include "../../include/structures.h"
 
 #define MSGLEN 2048
