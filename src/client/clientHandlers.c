@@ -1,15 +1,17 @@
 #include "../../include/clientHandlers.h"
 #include "string.h"
 #include "stdio.h"
+#include "stdlib.h"
 
-int helpHandler(char *buffer, char *MAGENTA, char *RESET) {
+int commandHandler(char *buffer, char *MAGENTA, char *RESET) {
     if (!strcmp(buffer, ":help\n")) {
         printf("%s", MAGENTA);
         printf("\t:help to get help\n");
         printf("%s", RESET);
         fflush(stdout);
         return 1;
-    } else {
-        return 0;
+    } else if (!strcmp(buffer, ":q\n")) {
+        exit(0);
     }
+    return 0;
 }

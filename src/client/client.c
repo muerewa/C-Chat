@@ -92,7 +92,7 @@ void *writeMsg(void *arguments) {
             }
             fgets(buffer, MSGLEN, stdin);
 
-            if (helpHandler(buffer, MAGENTA, RESET)) {
+            if (commandHandler(buffer, MAGENTA, RESET)) {
                 if (count == 2) {
                     printf("Enter username: ");
                     fflush(stdout);
