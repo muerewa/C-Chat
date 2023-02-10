@@ -71,6 +71,16 @@ void *Connection(void *argv) {
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
             char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
             if (user->msgCount == 0) {
+                char *helloMsg = "Welcome to C-Chat, ";
+                char hello[strlen(helloMsg) + strlen(user->name) + 1];
+                strcpy(hello, helloMsg);
+                strcat(hello, user->name);
+
+                long encMsg[MSGLEN] = {0};
+                encrypt(hello, encMsg, user->e, user->n);
+                encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+                write(fd, encMsg, encMsgLen);
+
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
                 strcpy(newBuffer, user->name);
