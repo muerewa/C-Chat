@@ -16,7 +16,7 @@
 #define MSGLEN 2048
 
 #define GREEN "\033[0;32m"
-#define MAGENTA "\033[0;35m";
+#define MAGENTA "\033[0;35m"
 #define RESET "\033[0m"
 
 
@@ -54,15 +54,14 @@ void *readMsg(void *arguments) {
             size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
             int valread = read(fd, encMsg, encMsgLen);
             decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
-            buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
                 printf("%s", GREEN);
-                printf("> %s\n", buffer);
+                printf("> %s", buffer);
                 printf("%s", RESET);
                 fflush(stdout);
             } else {
                 perror("server error\n");
-                exit(EXIT_FAILURE);
+                exit(0);
             }
         }
         count++;
@@ -89,7 +88,10 @@ void *writeMsg(void *arguments) {
             char buffer[MSGLEN] = {0};
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            fgets(buffer, MSGLEN - 1, stdin);
+            if (count > 2) {
+                printf("%s",RESET);
+            }
+            fgets(buffer, MSGLEN, stdin);
             encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
             write(fd, encMsg, encMsgLen);
         }
@@ -113,6 +115,10 @@ int main(int argc, char **argv) {
     generateKeys(&key);
 
     printf("done generating keys\n");
+    fflush(stdout);
+
+    printf("%s", MAGENTA);
+    printf("Welcome to C-Chat client!\n\tEnter :help to get help\n\nEnter username: ");
     fflush(stdout);
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
