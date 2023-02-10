@@ -17,12 +17,12 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
 
         if(read(fd, &buffer, sizeof(buffer)) != 0) {
             if (user->msgCount == 0) {
-                user->e = buffer;
-                write(fd, &key->e, sizeof(key->e));
+                user->exp = buffer;
+                write(fd, &key->exp, sizeof(key->exp));
                 user->msgCount = 1;
             } else if (user->msgCount == 1) {
-                user->n = buffer;
-                write(fd, &key->n, sizeof(key->n));
+                user->mod = buffer;
+                write(fd, &key->mod, sizeof(key->mod));
                 break;
             }
         }

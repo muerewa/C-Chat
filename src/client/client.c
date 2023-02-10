@@ -1,4 +1,3 @@
-#include "stdio.h"
 #include "../../include/wrappers.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7,29 +6,33 @@
 #include "sys/types.h"
 #include "pthread.h"
 #include "stdlib.h"
-#include "string.h"
 #include "../../include/structures.h"
 #include "../../include/RSA.h"
 #include "../../include/shifre.h"
-#include "../../include/handlers.h"
+#include "../../include/graphics.h"
+#include "ncurses.h"
+#include "locale.h"
 
 #define MSGLEN 2048
 
+WINDOW *chat, *input, *users;
 
 struct keys key;
 struct keys serverKeys;
+
+char name[MSGLEN];
 
 struct args {
     int fd;
 };
 
-
 /**
- * @brief 
- * 
- * @param arguments 
- * @return void* 
+ * @brief
+ *
+ * @param arguments
+ * @return void*
  */
+
 void *readMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
@@ -37,25 +40,30 @@ void *readMsg(void *arguments) {
         if (count == 0) {
             int buffer;
             if (read(fd, &buffer, sizeof(buffer)) != 0) {
-                serverKeys.e = buffer;
+                serverKeys.exp = buffer;
             }
         } else if (count == 1) {
             int buffer;
             if (read(fd, &buffer, sizeof(buffer)) != 0) {
-                serverKeys.n = buffer;
+                serverKeys.mod = buffer;
             }
         } else {
             char buffer[MSGLEN] = {};
             long encMsg[MSGLEN];
             size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
             int valread = read(fd, encMsg, encMsgLen);
-            decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
+            decrypt(encMsg, encMsgLen, buffer,key.deshifre, key.mod);
             buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
-                printf("%s\n", buffer);
+                wattron(chat,COLOR_PAIR(1));
+                printLogMsg(chat, "> ");
+                printLogMsg(chat, buffer);
+                printLogMsg(chat, "\n");
+                wattron(chat, COLOR_PAIR(2));
             } else {
-                perror("server error\n");
-                exit(EXIT_FAILURE);
+                printLogMsg(chat, "Server error...\n");
+                printLogMsg(chat, "Exiting...\n");
+                exit(0);
             }
         }
         count++;
@@ -64,10 +72,10 @@ void *readMsg(void *arguments) {
 
 
 /**
- * @brief 
- * 
- * @param arguments 
- * @return void* 
+ * @brief
+ *
+ * @param arguments
+ * @return void*
  */
 void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
@@ -75,16 +83,39 @@ void *writeMsg(void *arguments) {
 
     while (1) {
         if (count == 0) {
-            write(fd, &key.e, sizeof(key.e));
+            write(fd, &key.exp, sizeof(key.exp));
         } else if (count == 1) {
-            write(fd, &key.n, sizeof(key.n));
+            write(fd, &key.mod, sizeof(key.mod));
         } else {
-            char buffer[MSGLEN] = {0};
+            wattron(input,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
+            wattron(chat,count == 2 ? COLOR_PAIR(3) : COLOR_PAIR(2));
+            char buffer[MSGLEN] = "";
             long encMsg[MSGLEN] = {0};
             size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
-            fgets(buffer, MSGLEN - 1, stdin);
-            encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
+            msgInit(chat, input, count, name);
+
+            int key, j = 0;
+            while ((key = wgetch(input)) != 10) {
+                if (key == KEY_BACKSPACE) {
+                    wdelch(input);
+                    j--;
+                    buffer[j] = 0;
+                } else {
+                    buffer[j] = key;
+                    j++;
+                }
+            }
+            if (!strcmp(buffer, ":help")) {
+                printHelp(chat, input);
+                continue;
+            }
+            count == 2 ? strcpy(name, buffer) : "";
+            encrypt(buffer, encMsg, serverKeys.exp, serverKeys.mod);
             write(fd, encMsg, encMsgLen);
+            strcat(buffer, "\n");
+            printLogMsg(chat, buffer);
+            wclear(input);
+            wrefresh(input);
         }
         count++;
     }
@@ -92,21 +123,31 @@ void *writeMsg(void *arguments) {
 
 
 /**
- * @brief 
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @brief
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char **argv) {
 
-    printf("Generating keys...\n");
-    fflush(stdout);
+    setlocale(LC_CTYPE, "");
+    initNcurses();
+    chat = create_newwin(LINES - 2, COLS, 0, 0);
+    scrollok(chat,TRUE);
+
+    input = create_newwin(3, COLS, LINES - 3, 0);
+    keypad(input, true);
+
+    printLogMsg(chat, "Generating keys...\n");
 
     generateKeys(&key);
 
-    printf("done generating keys\n");
-    fflush(stdout);
+    printLogMsg(chat, "done generating keys\n");
+
+    wattron(chat,COLOR_PAIR(4));
+    printLogMsg(chat, "Welcome to C-Chat!\n\t \":help\" to get more information \n");
+    wattron(chat, COLOR_PAIR(2));
 
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
@@ -120,10 +161,12 @@ int main(int argc, char **argv) {
 
     Connectfd(client, (struct sockaddr *)&addr, sizeof addr);
 
-    pthread_t thread_id = 0;
+    pthread_t thread_id;
     pthread_create(&thread_id, NULL, writeMsg, (void *)arguments);
     pthread_create(&thread_id, NULL, readMsg, (void *)arguments);
     pthread_join(thread_id, NULL);
+
+    endwin();
 
     return 0;
 }

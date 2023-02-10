@@ -78,7 +78,7 @@ void generateKeys(struct keys *key) {
 
     n = p * q;
 
-    key->n = n;
-    key->e = e;
-    key->d = d;
+    key->mod = n;
+    key->exp = e;
+    key->deshifre = d;
 }

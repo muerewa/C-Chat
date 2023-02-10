@@ -16,7 +16,7 @@
 
 #define MSGLEN 2048
 
-struct users usersArr[30] = {}; // Массив сокетов
+struct users *usersArr[30] = {}; // Массив сокетов
 char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
 
@@ -38,6 +38,12 @@ struct args {
  * @param dummy 
  */
 void intHandler(int dummy) {
+
+    for (int i = 0; i < count; ++i) {
+        nicknames[i] = NULL;
+        close(usersArr[i]->fd);
+        free(usersArr[i]);
+    }
     close(*serverSocket);
     printServerLogMsg("Stopped server", true);
     exit(0);
@@ -60,10 +66,9 @@ void *Connection(void *argv) {
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
         int valread = read(fd, encMsg, encMsgLen); // Читаем сообщение
 
-        decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
+        decrypt(encMsg, encMsgLen, buffer, key.deshifre, key.mod);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
-        buffer[strlen(buffer) - 1] = '\0';
 
         if(valread != 0) { // Слушаем сообщения
 
@@ -71,6 +76,15 @@ void *Connection(void *argv) {
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
             char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
             if (user->msgCount == 0) {
+                char helloMsg[MSGLEN] = "Welcome to C-Chat, ";
+                strcat(helloMsg, user->name);
+                strcat(helloMsg, "!\n");
+
+                long encMsg[MSGLEN] = {0};
+                encrypt(helloMsg, encMsg, user->exp, user->mod);
+                encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+                write(fd, encMsg, encMsgLen);
+
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
                 strcpy(newBuffer, user->name);
@@ -83,11 +97,11 @@ void *Connection(void *argv) {
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(usersArr[i].fd != fd && nicknames[i] != NULL) {
+                if(usersArr[i]->fd != fd && nicknames[i] != NULL) {
                     long encMsg[MSGLEN] = {0};
-                    encrypt(newBuffer, encMsg, usersArr[i].e, usersArr[i].n);
+                    encrypt(newBuffer, encMsg, usersArr[i]->exp, usersArr[i]->mod);
                     encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                    write(usersArr[i].fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
+                    write(usersArr[i]->fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
                 }
             }
             user->msgCount = 1;
@@ -105,11 +119,11 @@ void *Connection(void *argv) {
 
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                    if(usersArr[i].fd != fd && nicknames[i] != NULL) {
+                    if(usersArr[i]->fd != fd && nicknames[i] != NULL) {
                         long encMsg[MSGLEN] = {0};
-                        encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
+                        encrypt(connBuffer, encMsg, usersArr[i]->exp, usersArr[i]->mod);
                         encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                        write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
+                        write(usersArr[i]->fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
                     }
                 }
             }
@@ -123,11 +137,11 @@ void *Connection(void *argv) {
 
 
 /**
- * @brief 
- * 
- * @param server 
- * @param addr 
- * @param addrlen 
+ * @brief
+ *
+ * @param server
+ * @param addr
+ * @param addrlen
  */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
@@ -151,7 +165,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
-            usersArr[count] = *user; // Добавляем в массив дескриптор
+            usersArr[count] = user; // Добавляем в массив дескриптор
             ++count;
             pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }
@@ -160,11 +174,12 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
 
 /**
- * @brief 
- * 
- * @return int 
+ * @brief
+ *
+ * @return int
  */
 int main(int argc, char **argv) {
+
     printf("Generating keys...\n");
     fflush(stdout);
 
