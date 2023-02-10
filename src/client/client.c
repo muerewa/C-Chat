@@ -52,7 +52,7 @@ void *readMsg(void *arguments) {
             decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
             buffer[strlen(buffer) - 1] = '\0';
             if (valread != 0) {
-                printf("%s\n", buffer);
+                printf("> %s\n", buffer);
             } else {
                 perror("server error\n");
                 exit(EXIT_FAILURE);
