@@ -48,11 +48,8 @@ void *readMsg(void *arguments) {
                 serverKeys.n = buffer;
             }
         } else {
-            char buffer[MSGLEN] = {};
-            long encMsg[MSGLEN];
-            size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-            int valread = read(fd, encMsg, encMsgLen);
-            decrypt(encMsg, encMsgLen, buffer,key.d, key.n);
+            int valread;
+            char *buffer = clientMsgHandler(fd, &valread, key.d, key.n);
             if (valread != 0) {
                 printf("%s", GREEN);
                 printf("> %s", buffer);
@@ -84,13 +81,13 @@ void *writeMsg(void *arguments) {
         } else if (count == 1) {
             write(fd, &key.n, sizeof(key.n));
         } else {
-            char buffer[MSGLEN] = {0};
-            long encMsg[MSGLEN] = {0};
-            size_t encMsgLen = sizeof(encMsg)/(sizeof encMsg[0]);
+            char buffer[MSGLEN];
             if (count > 2) {
                 printf("%s",RESET);
             }
             fgets(buffer, MSGLEN, stdin);
+            long size = strlen(buffer) - 1;
+            long encMsg[size];
 
             if (commandHandler(buffer, MAGENTA, RESET)) {
                 if (count == 2) {
@@ -100,8 +97,9 @@ void *writeMsg(void *arguments) {
                 continue;
             }
 
-            encrypt(buffer, encMsg, serverKeys.e, serverKeys.n);
-            write(fd, encMsg, encMsgLen);
+            encrypt(buffer, encMsg, size, serverKeys.e, serverKeys.n);
+            write(fd, &size, sizeof(long));
+            write(fd, encMsg, size * sizeof(long));
         }
         count++;
     }

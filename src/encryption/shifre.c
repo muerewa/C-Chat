@@ -40,8 +40,8 @@ long shifre(long b, long exp, long mod) {
  * @param e 
  * @param n 
  */
-void encrypt(char *msg, long *buffer, int e, int n) {
-    for (int i = 0; i < strlen(msg); ++i) {
+void encrypt(char *msg, long *buffer, int size, int e, int n) {
+    for (int i = 0; i <= size; ++i) {
         buffer[i] = shifre(msg[i], e, n);
     }
 }
@@ -56,7 +56,7 @@ void encrypt(char *msg, long *buffer, int e, int n) {
  * @param d 
  * @param n 
  */
-void decrypt(long *encMsg, size_t encMsgSize,char *buffer, int d, int n) {
+void decrypt(long *encMsg, size_t encMsgSize, char *buffer, int d, int n) {
     for (int i = 0; i < encMsgSize; ++i) {
         buffer[i] = shifre(encMsg[i], d, n);
     }

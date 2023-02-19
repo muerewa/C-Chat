@@ -3,5 +3,6 @@
 #include "structures.h"
 
 void serverKeyHandler(struct users *user, struct keys *key, int fd);
+char *serverMsgHandler(int fd, int *valread, int d, int n);
 
 #endif

@@ -52,32 +52,31 @@ void intHandler(int dummy) {
  */
 void *Connection(void *argv) {
     while (true) {
-        char buffer[MSGLEN] = {0};
-        long encMsg[MSGLEN] = {0};
-        size_t encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
+
         int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
-        int valread = read(fd, encMsg, encMsgLen); // Читаем сообщение
 
-        decrypt(encMsg, encMsgLen, buffer, key.d, key.n);
+        char *buffer;
+        int valread;
+        buffer = serverMsgHandler(fd, &valread, key.d, key.n);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
-        buffer[strlen(buffer) - 1] = '\0';
         if(valread != 0) { // Слушаем сообщения
 
             user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
-            char newBuffer[strlen(user->name) + strlen(msgBuff) + 5]; // Создаем буффер
+            char *newBuffer = malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
             if (user->msgCount == 0) {
                 char helloMsg[MSGLEN] = "Welcome to C-Chat, ";
                 strcat(helloMsg, user->name);
                 strcat(helloMsg, "!\n");
 
-                long encMsg[MSGLEN] = {0};
-                encrypt(helloMsg, encMsg, user->e, user->n);
-                encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                write(fd, encMsg, encMsgLen);
+                long size = strlen(helloMsg);
+                long encMsg[size];
+                encrypt(helloMsg, encMsg, size, user->e, user->n);
+                write(fd, &size, sizeof(long));
+                write(fd, encMsg, size * sizeof(long));
 
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
@@ -92,18 +91,20 @@ void *Connection(void *argv) {
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                    long encMsg[MSGLEN] = {0};
-                    encrypt(newBuffer, encMsg, usersArr[i].e, usersArr[i].n);
-                    encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                    write(usersArr[i].fd , encMsg, encMsgLen); // Отправляем сообщение всем кроме нас
+                    long size = strlen(newBuffer);
+                    long encMsg[size];
+                    encrypt(newBuffer, encMsg, size, usersArr[i].e, usersArr[i].n);
+                    write(usersArr[i].fd , &size, sizeof(long));
+                    write(usersArr[i].fd , encMsg, size * sizeof(long)); // Отправляем сообщение всем кроме нас
                 }
             }
             user->msgCount = 1;
+            free(newBuffer);
         } else {
-            char connBuffer[strlen(" disconnected\n") + strlen(user->name)];
+            char buffer[strlen(" disconnected\n") + strlen(user->name)];
 
-            strcpy(connBuffer, user->name);
-            strcat(connBuffer, " disconnected\n");
+            strcpy(buffer, user->name);
+            strcat(buffer, " disconnected\n");
 
             if(user->msgCount != 0) {
                 printUserLogMsg(fd, user->name, "disconnected");
@@ -114,10 +115,11 @@ void *Connection(void *argv) {
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                     if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                        long encMsg[MSGLEN] = {0};
-                        encrypt(connBuffer, encMsg, usersArr[i].e, usersArr[i].n);
-                        encMsgLen = sizeof(encMsg)/sizeof(encMsg[0]);
-                        write(usersArr[i].fd , encMsg , encMsgLen); // Отправляем сообщение всем кроме нас
+                        long size = strlen(buffer);
+                        long encMsg[size];
+                        encrypt(buffer, encMsg, size, usersArr[i].e, usersArr[i].n);
+                        write(usersArr[i].fd , &size, sizeof(long));
+                        write(usersArr[i].fd , encMsg, size * sizeof(long)); // Отправляем сообщение всем кроме нас
                     }
                 }
             }

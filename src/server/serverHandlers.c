@@ -2,7 +2,10 @@
 #include <unistd.h>
 #include "../../include/serverHandlers.h"
 #include "../../include/structures.h"
-
+#include "stdlib.h"
+#include "stdio.h"
+#include "../../include/shifre.h"
+#include "string.h"
 
 /**
  * @brief 
@@ -27,4 +30,17 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
             }
         }
     }
+}
+
+char *serverMsgHandler(int fd, int *valread, int d, int n) {
+    long size;
+    read(fd, &size, sizeof(long));
+
+    long encMsg[size];
+    char *buffer = (char *) malloc(size + 1);
+    *valread = read(fd, encMsg, size * sizeof(long));
+    decrypt(encMsg, size, buffer, d, n);
+    buffer[size] = '\0';
+
+    return buffer;
 }
