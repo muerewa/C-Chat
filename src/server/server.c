@@ -72,11 +72,7 @@ void *Connection(void *argv) {
                 strcat(helloMsg, user->name);
                 strcat(helloMsg, "!\n");
 
-                int size = strlen(helloMsg);
-                long encMsg[size];
-                encrypt(helloMsg, encMsg, size, user->e, user->n);
-                write(fd, &size, sizeof(int));
-                write(fd, encMsg, size * sizeof(long));
+                writeMsgHandler(fd, helloMsg, user->e, user->n);
 
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
@@ -91,11 +87,7 @@ void *Connection(void *argv) {
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                    int size = strlen(newBuffer);
-                    long encMsg[size];
-                    encrypt(newBuffer, encMsg, size, usersArr[i].e, usersArr[i].n);
-                    write(usersArr[i].fd , &size, sizeof(int));
-                    write(usersArr[i].fd , encMsg, size * sizeof(long)); // Отправляем сообщение всем кроме нас
+                    writeMsgHandler(usersArr[i].fd, newBuffer, usersArr[i].e, usersArr[i].n);
                 }
             }
             user->msgCount = 1;
@@ -115,11 +107,7 @@ void *Connection(void *argv) {
             if (user->msgCount != 0) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                     if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                        int size = strlen(buffer);
-                        long encMsg[size];
-                        encrypt(buffer, encMsg, size, usersArr[i].e, usersArr[i].n);
-                        write(usersArr[i].fd , &size, sizeof(int));
-                        write(usersArr[i].fd , encMsg, size * sizeof(long)); // Отправляем сообщение всем кроме нас
+                        writeMsgHandler(usersArr[i].fd, buffer, usersArr[i].e, usersArr[i].n);
                     }
                 }
             }
