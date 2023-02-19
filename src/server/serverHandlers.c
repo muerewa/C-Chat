@@ -1,8 +1,6 @@
 #include "stdio.h"
 #include <unistd.h>
 #include "../../include/serverHandlers.h"
-#include "stdlib.h"
-#include "../../include/shifre.h"
 
 /**
  * @brief 

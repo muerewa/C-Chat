@@ -2,8 +2,6 @@
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "unistd.h"
-#include "../../include/shifre.h"
 
 int commandHandler(char *buffer, char *MAGENTA, char *RESET) {
     if (!strcmp(buffer, ":help\n")) {
@@ -16,17 +14,4 @@ int commandHandler(char *buffer, char *MAGENTA, char *RESET) {
         exit(0);
     }
     return 0;
-}
-
-char *clientMsgHandler(int fd, int *valread, int d, int n) {
-    int size;
-    read(fd, &size, sizeof(int));
-
-    long encMsg[size];
-    char *buffer = (char *) malloc(size + 1);
-    *valread = read(fd, encMsg, size * sizeof(long));
-    decrypt(encMsg, size, buffer, d, n);
-    buffer[size] = '\0';
-
-    return buffer;
 }
