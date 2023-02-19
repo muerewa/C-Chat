@@ -86,7 +86,7 @@ void *writeMsg(void *arguments) {
                 printf("%s",RESET);
             }
             fgets(buffer, MSGLEN, stdin);
-            long size = strlen(buffer) - 1;
+            int size = strlen(buffer) - 1;
             long encMsg[size];
 
             if (commandHandler(buffer, MAGENTA, RESET)) {
@@ -98,7 +98,7 @@ void *writeMsg(void *arguments) {
             }
 
             encrypt(buffer, encMsg, size, serverKeys.e, serverKeys.n);
-            write(fd, &size, sizeof(long));
+            write(fd, &size, sizeof(int));
             write(fd, encMsg, size * sizeof(long));
         }
         count++;

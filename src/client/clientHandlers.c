@@ -19,8 +19,8 @@ int commandHandler(char *buffer, char *MAGENTA, char *RESET) {
 }
 
 char *clientMsgHandler(int fd, int *valread, int d, int n) {
-    long size;
-    read(fd, &size, sizeof(long));
+    int size;
+    read(fd, &size, sizeof(int));
 
     long encMsg[size];
     char *buffer = (char *) malloc(size + 1);
