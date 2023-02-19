@@ -128,6 +128,7 @@ void *Connection(void *argv) {
             free(user); // Освобождаем структуру
             pthread_exit(NULL); // Выходим из потока
         }
+        free(buffer);
     }
 }
 
