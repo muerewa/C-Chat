@@ -11,6 +11,7 @@
 #include "../../include/RSA.h"
 #include "../../include/shifre.h"
 #include "../../include/clientHandlers.h"
+#include "../../include/msgHandlers.h"
 
 #define MSGLEN 2048
 
@@ -49,7 +50,7 @@ void *readMsg(void *arguments) {
             }
         } else {
             int valread;
-            char *buffer = clientMsgHandler(fd, &valread, key.d, key.n);
+            char *buffer = readMsgHandler(fd, &valread, key.d, key.n);
             if (valread != 0) {
                 printf("%s", GREEN);
                 printf("> %s", buffer);

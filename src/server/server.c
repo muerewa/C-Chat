@@ -12,7 +12,7 @@
 #include "../../include/log.h"
 #include <signal.h>
 #include "../../include/serverHandlers.h"
-#include "../../include/structures.h"
+#include "../../include/msgHandlers.h"
 
 #define MSGLEN 2048
 
@@ -59,7 +59,7 @@ void *Connection(void *argv) {
 
         char *buffer;
         int valread;
-        buffer = serverMsgHandler(fd, &valread, key.d, key.n);
+        buffer = readMsgHandler(fd, &valread, key.d, key.n);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
         if(valread != 0) { // Слушаем сообщения
