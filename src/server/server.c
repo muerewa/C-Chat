@@ -3,7 +3,6 @@
 #include <netinet/in.h>
 #include "unistd.h"
 #include "../../include/RSA.h"
-#include "../../include/shifre.h"
 #include "../../include/wrappers.h"
 #include <pthread.h>
 #include "stdbool.h"

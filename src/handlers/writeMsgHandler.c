@@ -3,6 +3,13 @@
 #include "../../include/msgHandlers.h"
 #include "../../include/shifre.h"
 
+/**
+ *
+ * @param fd
+ * @param newBuffer
+ * @param e
+ * @param n
+ */
 void writeMsgHandler(int fd, char *newBuffer, int e, int n) {
     int size = strlen(newBuffer);
     long encMsg[size];

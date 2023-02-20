@@ -4,6 +4,14 @@
 #include "unistd.h"
 #include "../../include/shifre.h"
 
+/**
+ *
+ * @param fd
+ * @param valread
+ * @param d
+ * @param n
+ * @return
+ */
 char *readMsgHandler(int fd, int *valread, int d, int n) {
     int size;
     read(fd, &size, sizeof(int));

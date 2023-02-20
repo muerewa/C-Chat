@@ -3,6 +3,13 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+/**
+ *
+ * @param buffer
+ * @param MAGENTA
+ * @param RESET
+ * @return
+ */
 int commandHandler(char *buffer, char *MAGENTA, char *RESET) {
     if (!strcmp(buffer, ":help\n")) {
         printf("%s", MAGENTA);
