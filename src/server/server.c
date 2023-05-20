@@ -62,37 +62,36 @@ void *Connection(void *argv) {
         buffer = readMsgHandler(fd, &valread, key.d, key.n);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
+
+        user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
+        char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
+        char *Answer = malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
+
         if(valread != 0) { // Слушаем сообщения
 
-            user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
-            char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
-            char *newBuffer = malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
             if (user->msgCount == 0) {
-                char *msg = WelcomeMsg(user->name);
 
+                char *msg = WelcomeMsg(user->name);
                 writeMsgHandler(fd, msg, user->e, user->n);
                 free(msg);
 
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
-                strcpy(newBuffer, user->name);
-                strcat(newBuffer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
+                strcpy(Answer, user->name);
+                strcat(Answer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
             } else {
-                strcpy(newBuffer, user->name);
-                strcat(newBuffer, ": ");
-                strcat(newBuffer, msgBuff); // Добавляем в буффер сообщение
-                strcat(newBuffer, "\n\0");
+                MsgBufferHandler(Answer, user->name, msgBuff);
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                    writeMsgHandler(usersArr[i].fd, newBuffer, usersArr[i].e, usersArr[i].n);
+                    writeMsgHandler(usersArr[i].fd, Answer, usersArr[i].e, usersArr[i].n);
                 }
             }
             user->msgCount = 1;
-            free(newBuffer);
+            free(Answer);
         } else {
-            char buffer[strlen(" disconnected\n") + strlen(user->name)];
+            char *buffer = malloc(strlen(" disconnected\n") + strlen(user->name));
 
             strcpy(buffer, user->name);
             strcat(buffer, " disconnected\n");
@@ -110,6 +109,7 @@ void *Connection(void *argv) {
                     }
                 }
             }
+            free(buffer);
             fflush(stdout);
             nicknames[pthcount] = NULL;
             free(user); // Освобождаем структуру

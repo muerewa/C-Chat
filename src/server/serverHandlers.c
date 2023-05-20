@@ -39,3 +39,9 @@ char* WelcomeMsg(char *username) {
     return dst;
 }
 
+void MsgBufferHandler(char *buffer, const char *username, const char *msgBuff) {
+    strcpy(buffer, username);
+    strcat(buffer, ": ");
+    strcat(buffer, msgBuff); // Добавляем в буффер сообщение
+    strcat(buffer, "\n\0");
+}
