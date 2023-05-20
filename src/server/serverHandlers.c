@@ -1,6 +1,8 @@
 #include "stdio.h"
 #include <unistd.h>
 #include "../../include/serverHandlers.h"
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * @brief 
@@ -26,3 +28,14 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
         }
     }
 }
+
+char* WelcomeMsg(char *username) {
+    char *dst = malloc(strlen(username));
+    char *helloMsg = "Welcome to chat, ";
+    dst = realloc(dst, strlen(helloMsg) + 2);
+    strcat(dst, helloMsg);
+    strcat(dst, username);
+    strcat(dst, "!\n");
+    return dst;
+}
+

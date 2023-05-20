@@ -2,14 +2,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "unistd.h"
-#include "../../include/RSA.h"
-#include "../../include/wrappers.h"
 #include <pthread.h>
 #include "stdbool.h"
 #include "string.h"
 #include "stdlib.h"
-#include "../../include/log.h"
 #include <signal.h>
+
+#include "../../include/RSA.h"
+#include "../../include/wrappers.h"
+#include "../../include/log.h"
 #include "../../include/serverHandlers.h"
 #include "../../include/msgHandlers.h"
 
@@ -67,11 +68,10 @@ void *Connection(void *argv) {
             char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
             char *newBuffer = malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
             if (user->msgCount == 0) {
-                char helloMsg[MSGLEN] = "Welcome to C-Chat, ";
-                strcat(helloMsg, user->name);
-                strcat(helloMsg, "!\n");
+                char *msg = WelcomeMsg(user->name);
 
-                writeMsgHandler(fd, helloMsg, user->e, user->n);
+                writeMsgHandler(fd, msg, user->e, user->n);
+                free(msg);
 
                 printUserLogMsg(fd, user->name, "joined chat");
                 nicknames[pthcount] = user->name;
