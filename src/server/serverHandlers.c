@@ -30,12 +30,12 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
 }
 
 char* WelcomeMsg(char *username) {
-    char *dst = malloc(strlen(username));
+    char *dst =  (char *) malloc(strlen(username));
     char *helloMsg = "Welcome to chat, ";
     dst = realloc(dst, strlen(helloMsg) + 2);
     strcat(dst, helloMsg);
     strcat(dst, username);
-    strcat(dst, "!\n");
+    strcat(dst, "!");
     return dst;
 }
 
@@ -43,5 +43,4 @@ void MsgBufferHandler(char *buffer, const char *username, const char *msgBuff) {
     strcpy(buffer, username);
     strcat(buffer, ": ");
     strcat(buffer, msgBuff); // Добавляем в буффер сообщение
-    strcat(buffer, "\n\0");
 }

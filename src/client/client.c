@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include "unistd.h"
 #include "string.h"
-#include "sys/types.h"
 #include "pthread.h"
 #include "stdlib.h"
 #include "../../include/structures.h"
@@ -53,7 +52,7 @@ void *readMsg(void *arguments) {
             char *buffer = readMsgHandler(fd, &valread, key.d, key.n);
             if (valread != 0) {
                 printf("%s", GREEN);
-                printf("> %s", buffer);
+                printf("> %s\n", buffer);
                 printf("%s", RESET);
                 fflush(stdout);
             } else {

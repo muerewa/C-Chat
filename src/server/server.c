@@ -63,11 +63,11 @@ void *Connection(void *argv) {
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
 
-        user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
-        char *msgBuff = user->msgCount == 0 ? " joined chat\n" : buffer;
-        char *Answer = malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
+        if(valread > 0) { // Слушаем сообщения
 
-        if(valread != 0) { // Слушаем сообщения
+            user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
+            char *msgBuff = user->msgCount == 0 ? " joined chat" : buffer;
+            char *Answer = (char *) malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
 
             if (user->msgCount == 0) {
 
@@ -90,11 +90,12 @@ void *Connection(void *argv) {
             }
             user->msgCount = 1;
             free(Answer);
+            free(buffer);
         } else {
-            char *buffer = malloc(strlen(" disconnected\n") + strlen(user->name));
+            char *buffer = malloc(strlen(" disconnected") + strlen(user->name));
 
-            strcpy(buffer, user->name);
-            strcat(buffer, " disconnected\n");
+            strcat(buffer, user->name);
+            strcat(buffer, " disconnected");
 
             if(user->msgCount != 0) {
                 printUserLogMsg(fd, user->name, "disconnected");
@@ -109,13 +110,12 @@ void *Connection(void *argv) {
                     }
                 }
             }
-            free(buffer);
             fflush(stdout);
             nicknames[pthcount] = NULL;
             free(user); // Освобождаем структуру
+            free(buffer);
             pthread_exit(NULL); // Выходим из потока
         }
-        free(buffer);
     }
 }
 
