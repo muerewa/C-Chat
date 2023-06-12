@@ -17,7 +17,7 @@ char *readMsgHandler(int fd, int *valread, int d, int n) {
     read(fd, &size, sizeof(int));
 
     long encMsg[size];
-    char *buffer = (char *) malloc(size + 1);
+    char *buffer = malloc(size + 1);
     *valread = read(fd, encMsg, size * sizeof(long));
 
     if (*valread <= 0) {

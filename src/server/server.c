@@ -90,7 +90,6 @@ void *Connection(void *argv) {
             }
             user->msgCount = 1;
             free(Answer);
-            free(buffer);
         } else {
             char *buffer = malloc(strlen(" disconnected") + strlen(user->name) + 1);
 
@@ -112,11 +111,13 @@ void *Connection(void *argv) {
             }
             fflush(stdout);
             nicknames[pthcount] = NULL;
+            free(user->name);
             free(user); // Освобождаем структуру
             free(buffer);
             free(argv);
             pthread_exit(NULL); // Выходим из потока
         }
+        free(buffer);
     }
 }
 
@@ -153,6 +154,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             usersArr[count] = *user; // Добавляем в массив дескриптор
             ++count;
             pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
+
         }
     }
 }
