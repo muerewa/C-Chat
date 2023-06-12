@@ -92,7 +92,7 @@ void *Connection(void *argv) {
             free(Answer);
             free(buffer);
         } else {
-            char *buffer = malloc(strlen(" disconnected") + strlen(user->name));
+            char *buffer = malloc(strlen(" disconnected") + strlen(user->name) + 1);
 
             strcat(buffer, user->name);
             strcat(buffer, " disconnected");
@@ -114,6 +114,7 @@ void *Connection(void *argv) {
             nicknames[pthcount] = NULL;
             free(user); // Освобождаем структуру
             free(buffer);
+            free(argv);
             pthread_exit(NULL); // Выходим из потока
         }
     }

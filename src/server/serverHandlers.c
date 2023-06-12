@@ -30,9 +30,8 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
 }
 
 char* WelcomeMsg(char *username) {
-    char *dst =  (char *) malloc(strlen(username));
     char *helloMsg = "Welcome to chat, ";
-    dst = realloc(dst, strlen(helloMsg) + 2);
+    char *dst =  (char *) malloc(strlen(username) + strlen(helloMsg) + 2);
     strcat(dst, helloMsg);
     strcat(dst, username);
     strcat(dst, "!");
