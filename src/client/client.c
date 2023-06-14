@@ -113,7 +113,22 @@ void *writeMsg(void *arguments) {
  * @param argv 
  * @return int 
  */
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
+
+    char *ip;
+    int port;
+    int rez;
+    while ( (rez = getopt(argc, argv, "hi:p:")) != -1){
+        switch (rez) {
+            case 'h': printf("Use -i to set ip of server and -p to set port\n"); break;
+            case 'i': ip = optarg; break;
+            case 'p': port = atoi(optarg); break;
+        }
+    }
+    if (port == 0 || ip == NULL) {
+        printf("Invalid arguments. Try -h to get help\n");
+        exit(0);
+    }
 
     printf("Generating keys...\n");
     fflush(stdout);
@@ -127,12 +142,13 @@ int main(int argc, char **argv) {
     printf("Welcome to C-Chat client!\n\tEnter :help to get help\n\nEnter username: ");
     fflush(stdout);
 
+
     int client = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {0};
 
     addr.sin_family = AF_INET; // Семейство протоколов(ipv4)
-    addr.sin_port = htons(3030); // Порт сервера
-    Inet_ptonfd(AF_INET, "127.0.0.1", &addr.sin_addr); // Задаем айпи сервера
+    addr.sin_port = htons(port); // Порт сервера
+    Inet_ptonfd(AF_INET, ip, &addr.sin_addr); // Задаем айпи сервера
 
     struct args *arguments = (struct args *)malloc(sizeof(struct args));
     arguments->fd = client;
