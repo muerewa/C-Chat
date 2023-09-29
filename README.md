@@ -1,6 +1,9 @@
 ### Description
 ____
 Simple terminal chat written in C using sockets
+
+The goal of this project is a lightweight, secure and functional chat with the ability to quickly set up and use on the linux operating system.
+
 ### Install
 ____
 Build server and chat:

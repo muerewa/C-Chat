@@ -16,9 +16,11 @@
 
 #define MSGLEN 2048
 
-struct users usersArr[30] = {}; // Массив сокетов
+struct users* usersArr[30] = {NULL}; // Массив сокетов
 char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
+
+pthread_mutex_t mutex;
 
 int *serverSocket = NULL;
 
@@ -43,6 +45,13 @@ void intHandler(int dummy) {
     exit(0);
 }
 
+int newUser() {
+    int i = 0;
+    while (usersArr[i] != NULL) {
+        i++;
+    }
+    return i;
+}
 
 /**
  * @brief 
@@ -76,7 +85,9 @@ void *Connection(void *argv) {
                 free(msg);
 
                 printUserLogMsg(fd, user->name, "joined chat");
+                pthread_mutex_lock(&mutex);
                 nicknames[pthcount] = user->name;
+                pthread_mutex_unlock(&mutex);
                 strcpy(Answer, user->name);
                 strcat(Answer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
             } else {
@@ -84,40 +95,53 @@ void *Connection(void *argv) {
             }
 
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                    writeMsgHandler(usersArr[i].fd, Answer, usersArr[i].e, usersArr[i].n);
+                if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
+                    pthread_mutex_lock(&mutex);
+                    writeMsgHandler(usersArr[i]->fd, Answer, usersArr[i]->e, usersArr[i]->n);
+                    pthread_mutex_unlock(&mutex);
                 }
             }
             user->msgCount = 1;
             free(Answer);
+            free(buffer);
         } else {
-            char *buffer = malloc(strlen(" disconnected") + strlen(user->name) + 1);
-
-            strcat(buffer, user->name);
-            strcat(buffer, " disconnected");
+            int s = strlen(" disconnected");
+            char *disbuffer = malloc( s + 1);
 
             if(user->msgCount != 0) {
+                disbuffer = realloc(disbuffer, s + 1 + strlen(user->name));
+                strcpy(disbuffer, user->name);
+                strcat(disbuffer, " disconnected");
                 printUserLogMsg(fd, user->name, "disconnected");
+                pthread_mutex_lock(&mutex);
+                free(user->name);
+                pthread_mutex_unlock(&mutex);
             } else {
+                char *usr = "user";
+                disbuffer = realloc(disbuffer, strlen(usr) + 1 + s);
+                strcat(disbuffer, " disconnected");
                 printUserLogMsg(fd, "", "disconnected");
             }
 
-            if (user->msgCount != 0) {
+            if ((user->msgCount != 0) && count <= 1) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                    if(usersArr[i].fd != fd && nicknames[i] != NULL) {
-                        writeMsgHandler(usersArr[i].fd, buffer, usersArr[i].e, usersArr[i].n);
+                    if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
+                        pthread_mutex_lock(&mutex);
+                        writeMsgHandler(usersArr[i]->fd, disbuffer, usersArr[i]->e, usersArr[i]->n);
+                        pthread_mutex_unlock(&mutex);
                     }
                 }
             }
+            pthread_mutex_lock(&mutex);
             fflush(stdout);
             nicknames[pthcount] = NULL;
-            free(user->name);
+            usersArr[pthcount] = NULL;
             free(user); // Освобождаем структуру
-            free(buffer);
+            free(disbuffer);
             free(argv);
+            pthread_mutex_unlock(&mutex);
             pthread_exit(NULL); // Выходим из потока
         }
-        free(buffer);
     }
 }
 
@@ -131,10 +155,10 @@ void *Connection(void *argv) {
  */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
-        if(count <= 30) {
+        if(count <= 2) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             pthread_t thread_id = count; // создаем id потока
-            int pthcount = count;
+            int pthcount = newUser();
 
             printUserLogMsg(fd, "", "connected");
 
@@ -146,20 +170,22 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             struct users *user = malloc(sizeof(struct users)); // Инициализируем структуру
             user->fd = fd;
             user->msgCount = 0;
-
             serverKeyHandler(user,&key,fd);
 
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
-            usersArr[count] = *user; // Добавляем в массив дескриптор
+            usersArr[pthcount] = user; // Добавляем в массив дескриптор
+            printf("%d\n", pthcount);
             ++count;
-            pthread_create(&thread_id, NULL, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
-
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+            pthread_create(&thread_id, &attr, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }
     }
 }
 
-
+ 
 /**
  * @brief 
  * 

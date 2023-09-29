@@ -13,19 +13,17 @@
  * @return
  */
 char *readMsgHandler(int fd, int *valread, int d, int n) {
-    int size;
+    int size = 0;
     read(fd, &size, sizeof(int));
 
     long encMsg[size];
-    char *buffer = malloc(size + 1);
+    char *buffer = malloc(size - 1);
     *valread = read(fd, encMsg, size * sizeof(long));
 
     if (*valread <= 0) {
         return "";
     }
-
     decrypt(encMsg, size, buffer, d, n);
     buffer[size] = '\0';
-
     return buffer;
 }

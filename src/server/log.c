@@ -46,7 +46,6 @@ void printUserLogMsg(int fd, char *name, char *msg) {
     fflush(stdout);
 }
 
-
 /**
  * @brief 
  * 
