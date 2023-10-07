@@ -122,7 +122,7 @@ void *Connection(void *argv) {
                 printUserLogMsg(fd, "", "disconnected");
             }
 
-            if ((user->msgCount != 0) && count <= 1) {
+            if ((user->msgCount != 0) && count >= 1) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                     if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
                         pthread_mutex_lock(&mutex);
@@ -155,7 +155,7 @@ void *Connection(void *argv) {
  */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
-        if(count <= 2) {
+        if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             pthread_t thread_id = count; // создаем id потока
             int pthcount = newUser();
