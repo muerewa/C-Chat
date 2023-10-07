@@ -66,13 +66,12 @@ void *Connection(void *argv) {
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
 
-        char *buffer;
         int valread;
-        buffer = readMsgHandler(fd, &valread, key.d, key.n);
+        char *buffer = readMsgHandler(fd, &valread, &key);
 
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
 
-        if(valread > 0) { // Слушаем сообщения
+        if(valread > 0) {
 
             user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
             char *msgBuff = user->msgCount == 0 ? " joined chat" : buffer;
@@ -81,7 +80,7 @@ void *Connection(void *argv) {
             if (user->msgCount == 0) {
 
                 char *msg = WelcomeMsg(user->name);
-                writeMsgHandler(fd, msg, user->e, user->n);
+                writeMsgHandler(fd, msg, user->pubKey);
                 free(msg);
 
                 printUserLogMsg(fd, user->name, "joined chat");
@@ -89,7 +88,7 @@ void *Connection(void *argv) {
                 nicknames[pthcount] = user->name;
                 pthread_mutex_unlock(&mutex);
                 strcpy(Answer, user->name);
-                strcat(Answer, msgBuff); // Если первое сообщение то выводим сообщение о присоединении
+                strcat(Answer, msgBuff);
             } else {
                 MsgBufferHandler(Answer, user->name, msgBuff);
             }
@@ -97,7 +96,7 @@ void *Connection(void *argv) {
             for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                 if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
                     pthread_mutex_lock(&mutex);
-                    writeMsgHandler(usersArr[i]->fd, Answer, usersArr[i]->e, usersArr[i]->n);
+                    writeMsgHandler(usersArr[i]->fd, Answer, usersArr[i]->pubKey);
                     pthread_mutex_unlock(&mutex);
                 }
             }
@@ -127,7 +126,7 @@ void *Connection(void *argv) {
                 for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
                     if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
                         pthread_mutex_lock(&mutex);
-                        writeMsgHandler(usersArr[i]->fd, disbuffer, usersArr[i]->e, usersArr[i]->n);
+                        writeMsgHandler(usersArr[i]->fd, disbuffer, usersArr[i]->pubKey);
                         pthread_mutex_unlock(&mutex);
                     }
                 }
@@ -136,6 +135,7 @@ void *Connection(void *argv) {
             fflush(stdout);
             nicknames[pthcount] = NULL;
             usersArr[pthcount] = NULL;
+            free(user->pubKey);
             free(user); // Освобождаем структуру
             free(disbuffer);
             free(argv);
@@ -175,7 +175,6 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
             usersArr[pthcount] = user; // Добавляем в массив дескриптор
-            printf("%d\n", pthcount);
             ++count;
             pthread_attr_t attr;
             pthread_attr_init(&attr);

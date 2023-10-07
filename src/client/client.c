@@ -8,9 +8,11 @@
 #include "stdlib.h"
 #include "../../include/structures.h"
 #include "../../include/RSA.h"
-#include "../../include/shifre.h"
 #include "../../include/clientHandlers.h"
 #include "../../include/msgHandlers.h"
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
 
 #define MSGLEN 2048
 
@@ -36,20 +38,26 @@ struct args {
 void *readMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
+    long size;
     while (1) {
         if (count == 0) {
-            int buffer;
-            if (read(fd, &buffer, sizeof(buffer)) != 0) {
-                serverKeys.e = buffer;
+            read(fd, &size, sizeof(long));
+        }else if (count == 1) {
+            char *buffer = malloc(size);
+            if (read(fd, buffer, size) == 0) {
+                printf("Ошибка получения ключа");
             }
-        } else if (count == 1) {
-            int buffer;
-            if (read(fd, &buffer, sizeof(buffer)) != 0) {
-                serverKeys.n = buffer;
+            BIO *bio_memory = BIO_new_mem_buf(buffer, -1);
+            serverKeys.pubKey = PEM_read_bio_PUBKEY(bio_memory, NULL, NULL, NULL);
+            if (serverKeys.pubKey == NULL) {
+                printf("Ошибка восстановления ключа\n");
+                exit(0);
             }
+            free(bio_memory);
+            free(buffer);
         } else {
             int valread;
-            char *buffer = readMsgHandler(fd, &valread, key.d, key.n);
+            char *buffer = readMsgHandler(fd, &valread, &key);
             if (valread != 0) {
                 printf("%s", GREEN);
                 printf("> %s\n", buffer);
@@ -59,6 +67,7 @@ void *readMsg(void *arguments) {
                 perror("server error\n");
                 exit(0);
             }
+            free(buffer);
         }
         count++;
     }
@@ -74,21 +83,23 @@ void *readMsg(void *arguments) {
 void *writeMsg(void *arguments) {
     int fd = ((struct args*)arguments)->fd;
     int count = 0;
-
+    BIO *bio_mem = BIO_new(BIO_s_mem());
+    PEM_write_bio_PUBKEY(bio_mem, key.pubKey);
+    char *pubkey_pem;
+    long size = BIO_get_mem_data(bio_mem, &pubkey_pem);
+    free(bio_mem);
     while (1) {
         if (count == 0) {
-            write(fd, &key.e, sizeof(key.e));
+            write(fd, &size, sizeof(long));
         } else if (count == 1) {
-            write(fd, &key.n, sizeof(key.n));
+            write(fd, pubkey_pem, size);
         } else {
             char buffer[MSGLEN];
             if (count > 2) {
                 printf("%s",RESET);
             }
             fgets(buffer, MSGLEN, stdin);
-            int size = strlen(buffer) - 1;
-            long encMsg[size];
-
+            buffer[strlen(buffer) - 1] = '\0';
             if (commandHandler(buffer, MAGENTA, RESET)) {
                 if (count == 2) {
                     printf("Enter username: ");
@@ -96,10 +107,7 @@ void *writeMsg(void *arguments) {
                 }
                 continue;
             }
-
-            encrypt(buffer, encMsg, size, serverKeys.e, serverKeys.n);
-            write(fd, &size, sizeof(int));
-            write(fd, encMsg, size * sizeof(long));
+            writeMsgHandler(fd, buffer, serverKeys.pubKey);
         }
         count++;
     }
