@@ -18,22 +18,29 @@
  */
 static void ErrorHandler(char *errorMsg, int *statusCode) {
     printf("%s", errorMsg);
+    fflush(stdout);
     *statusCode = -1;
 }
 
 char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
     size_t size = 0;
-    if (read(fd, &size, sizeof(size_t)) <= 0) {
-        ErrorHandler("Получения длины сообщения\n", statusCode);
-        return "";
-    }
+
+    int sread = read(fd, &size, sizeof(size_t));
 
     char *encryptedData = malloc(size);
     *valread = read(fd, encryptedData, size);
 
-    if (*valread <= 0) {
+    if (*valread == 0) {
         free(encryptedData);
-        ErrorHandler("Ошибка при создании контекста дешифрования RSA\n", statusCode);
+        return "";
+    } else if (*valread < 0) {
+        if (sread <= 0) {
+            ErrorHandler("Ошибка при получении длины сообщения\n",statusCode);
+            free(encryptedData);
+            return "";
+        }
+        free(encryptedData);
+        ErrorHandler("Ошибка при получении сообщения\n", statusCode);
         return "";
     }
     // Создание контекста дешифроцирования RSA

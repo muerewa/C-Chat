@@ -38,6 +38,7 @@ int serverKeyHandler(struct users *user, struct keys *key, int fd) {
                 printf("Ошибка восстановления ключа\n");
                 return -1;
             }
+            fflush(stdout);
             write(fd, pubkey_pem, pubkey_pem_size);
             free(buffer);
             BIO_free(bio_mem);
