@@ -21,14 +21,14 @@ int serverKeyHandler(struct users *user, struct keys *key, int fd) {
 
     while (1) {
         if (count == 0) {
-            if(read(fd, &sizeOfOut, sizeof(long)) == 0) {
+            if(read(fd, &sizeOfOut, sizeof(long)) <= 0) {
                 printf("Ошибка получения длины ключа");
                 return -1;
             }
             write(fd, &pubkey_pem_size, sizeof(long));
         } else {
             unsigned char *buffer = malloc(sizeOfOut);
-            if(read(fd, buffer, sizeOfOut) == 0) {
+            if(read(fd, buffer, sizeOfOut) <= 0) {
                 printf("Ошибка получения ключа");
                 return -1;
             }

@@ -16,26 +16,31 @@
  * @param n
  * @return
  */
-static void ErrorHandler(char *errorMsg) {
+static void ErrorHandler(char *errorMsg, int *statusCode) {
     printf("%s", errorMsg);
+    *statusCode = -1;
 }
 
 char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
     size_t size = 0;
-    read(fd, &size, sizeof(size_t));
+    if (read(fd, &size, sizeof(size_t)) <= 0) {
+        ErrorHandler("Получения длины сообщения\n", statusCode);
+        return "";
+    }
 
     char *encryptedData = malloc(size);
     *valread = read(fd, encryptedData, size);
 
     if (*valread <= 0) {
+        free(encryptedData);
+        ErrorHandler("Ошибка при создании контекста дешифрования RSA\n", statusCode);
         return "";
     }
     // Создание контекста дешифроцирования RSA
     EVP_PKEY_CTX *ctxDecrypt = EVP_PKEY_CTX_new(key->privKey, NULL);
     if (ctxDecrypt == NULL) {
         free(encryptedData);
-        ErrorHandler("Ошибка при создании контекста дешифрования RSA\n");
-        *statusCode = -1;
+        ErrorHandler("Ошибка при создании контекста дешифрования RSA\n", statusCode);
         return "";
     }
 
@@ -43,8 +48,7 @@ char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
     if (EVP_PKEY_decrypt_init(ctxDecrypt) != 1) {
         EVP_PKEY_CTX_free(ctxDecrypt);
         free(encryptedData);
-        ErrorHandler("Ошибка при инициализации дешифрования RSA\n");
-        *statusCode = -1;
+        ErrorHandler("Ошибка при инициализации дешифрования RSA\n", statusCode);
         return "";
     }
 
@@ -53,8 +57,7 @@ char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
     if (EVP_PKEY_decrypt(ctxDecrypt, NULL, &decryptedLen, (unsigned char *)encryptedData, size) != 1) {
         EVP_PKEY_CTX_free(ctxDecrypt);
         free(encryptedData);
-        ErrorHandler("Ошибка при вычислении размера расшифрованных данных\n");
-        *statusCode = -1;
+        ErrorHandler("Ошибка при вычислении размера расшифрованных данных\n", statusCode);
         return "";
     }
 
@@ -64,8 +67,7 @@ char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
         EVP_PKEY_CTX_free(ctxDecrypt);
         free(encryptedData);
         free(decryptedData);
-        ErrorHandler("Ошибка при расшифровке данных\n");
-        *statusCode = -1;
+        ErrorHandler("Ошибка при расшифровке данных\n", statusCode);
         return "";
     }
     decryptedData[decryptedLen] = '\0';
