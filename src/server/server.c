@@ -170,7 +170,13 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             struct users *user = malloc(sizeof(struct users)); // Инициализируем структуру
             user->fd = fd;
             user->msgCount = 0;
-            serverKeyHandler(user,&key,fd);
+            int res = serverKeyHandler(user,&key,fd);
+            if (res == -1) {
+                close(fd);
+                free(user);
+                free(Thread);
+                continue;
+            }
 
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока

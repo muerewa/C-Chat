@@ -11,7 +11,7 @@
  * @param key 
  * @param fd 
  */
-void serverKeyHandler(struct users *user, struct keys *key, int fd) {
+int serverKeyHandler(struct users *user, struct keys *key, int fd) {
     int count = 0;
     long sizeOfOut;
     BIO *bio_mem = BIO_new(BIO_s_mem());
@@ -23,20 +23,20 @@ void serverKeyHandler(struct users *user, struct keys *key, int fd) {
         if (count == 0) {
             if(read(fd, &sizeOfOut, sizeof(long)) == 0) {
                 printf("Ошибка получения длины ключа");
-                exit(0);
+                return -1;
             }
             write(fd, &pubkey_pem_size, sizeof(long));
         } else {
             unsigned char *buffer = malloc(sizeOfOut);
             if(read(fd, buffer, sizeOfOut) == 0) {
                 printf("Ошибка получения ключа");
-                exit(0);
+                return -1;
             }
             BIO *bio_memory = BIO_new_mem_buf(buffer, -1);
             user->pubKey = PEM_read_bio_PUBKEY(bio_memory, NULL, NULL, NULL);
             if (user->pubKey == NULL) {
                 printf("Ошибка восстановления ключа\n");
-                exit(0);
+                return -1;
             }
             write(fd, pubkey_pem, pubkey_pem_size);
             free(buffer);
