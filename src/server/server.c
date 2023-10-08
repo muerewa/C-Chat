@@ -66,10 +66,15 @@ void *Connection(void *argv) {
 
         int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
 
+        int statcode = 0;
         int valread;
-        char *buffer = readMsgHandler(fd, &valread, &key);
-
+        char *buffer = readMsgHandler(fd, &valread, &key, &statcode);
         struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
+
+        if (statcode == -1) {
+            writeMsgHandler(user->fd,"Некорректное сообщение", user->pubKey);
+            continue;
+        }
 
         if(valread > 0) {
 

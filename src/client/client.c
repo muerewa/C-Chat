@@ -19,7 +19,7 @@
 #define GREEN "\033[0;32m"
 #define MAGENTA "\033[0;35m"
 #define RESET "\033[0m"
-
+#define RED "\033[0;31m"
 
 struct keys key;
 struct keys serverKeys;
@@ -57,7 +57,15 @@ void *readMsg(void *arguments) {
             free(buffer);
         } else {
             int valread;
-            char *buffer = readMsgHandler(fd, &valread, &key);
+            int statCode = 0;
+            char *buffer = readMsgHandler(fd, &valread, &key, &statCode);
+            if (statCode == -1) {
+                printf("%s", RED);
+                printf("> Server: ошибка при передаче сообщения\n");
+                printf("%s", RESET);
+                fflush(stdout);
+                continue;
+            }
             if (valread != 0) {
                 printf("%s", GREEN);
                 printf("> %s\n", buffer);

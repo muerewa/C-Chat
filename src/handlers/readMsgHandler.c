@@ -16,13 +16,11 @@
  * @param n
  * @return
  */
-static void ErrorHandler(struct keys *key, char *errorMsg) {
+static void ErrorHandler(char *errorMsg) {
     printf("%s", errorMsg);
-    EVP_PKEY_free(key->pubKey);
-    EVP_PKEY_free(key->privKey);
 }
 
-char *readMsgHandler(int fd, int *valread, struct keys *key) {
+char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
     size_t size = 0;
     read(fd, &size, sizeof(size_t));
 
@@ -36,16 +34,18 @@ char *readMsgHandler(int fd, int *valread, struct keys *key) {
     EVP_PKEY_CTX *ctxDecrypt = EVP_PKEY_CTX_new(key->privKey, NULL);
     if (ctxDecrypt == NULL) {
         free(encryptedData);
-        ErrorHandler(key,"Ошибка при создании контекста дешифрования RSA\n");
-        exit(1);
+        ErrorHandler("Ошибка при создании контекста дешифрования RSA\n");
+        *statusCode = -1;
+        return "";
     }
 
     // Инициализация операции дешифрования
     if (EVP_PKEY_decrypt_init(ctxDecrypt) != 1) {
         EVP_PKEY_CTX_free(ctxDecrypt);
         free(encryptedData);
-        ErrorHandler(key,"Ошибка при инициализации дешифрования RSA\n");
-        exit(0);
+        ErrorHandler("Ошибка при инициализации дешифрования RSA\n");
+        *statusCode = -1;
+        return "";
     }
 
     // Вычисление размера выходного буфера для расшифрованных данных
@@ -53,8 +53,9 @@ char *readMsgHandler(int fd, int *valread, struct keys *key) {
     if (EVP_PKEY_decrypt(ctxDecrypt, NULL, &decryptedLen, (unsigned char *)encryptedData, size) != 1) {
         EVP_PKEY_CTX_free(ctxDecrypt);
         free(encryptedData);
-        ErrorHandler(key,"Ошибка при вычислении размера расшифрованных данных\n");
-        exit(0);
+        ErrorHandler("Ошибка при вычислении размера расшифрованных данных\n");
+        *statusCode = -1;
+        return "";
     }
 
     // Расшифровка данных
@@ -63,8 +64,9 @@ char *readMsgHandler(int fd, int *valread, struct keys *key) {
         EVP_PKEY_CTX_free(ctxDecrypt);
         free(encryptedData);
         free(decryptedData);
-        ErrorHandler(key,"Ошибка при расшифровке данных\n");
-        exit(0);
+        ErrorHandler("Ошибка при расшифровке данных\n");
+        *statusCode = -1;
+        return "";
     }
     decryptedData[decryptedLen] = '\0';
     return decryptedData;
