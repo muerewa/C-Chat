@@ -26,7 +26,7 @@ sudo systemctl stop chat-server.service
 ```
 Use this commands for start client or server in your terminal:
 ```
-chat-client
+chat-client -i ip_address -p port
 chat-server
 ```
 ### Uninstall
