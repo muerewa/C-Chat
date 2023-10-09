@@ -22,14 +22,14 @@ int serverKeyHandler(struct users *user, struct keys *key, int fd) {
     while (1) {
         if (count == 0) {
             if(read(fd, &sizeOfOut, sizeof(long)) <= 0) {
-                printf("Ошибка получения длины ключа");
+                printf("Ошибка получения длины ключа\n");
                 return -1;
             }
             write(fd, &pubkey_pem_size, sizeof(long));
         } else {
             unsigned char *buffer = malloc(sizeOfOut);
             if(read(fd, buffer, sizeOfOut) <= 0) {
-                printf("Ошибка получения ключа");
+                printf("Ошибка получения ключа\n");
                 return -1;
             }
             BIO *bio_memory = BIO_new_mem_buf(buffer, -1);
@@ -48,6 +48,7 @@ int serverKeyHandler(struct users *user, struct keys *key, int fd) {
         }
         count++;
     }
+    return 0;
 }
 
 char* WelcomeMsg(char *username) {
