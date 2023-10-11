@@ -27,11 +27,12 @@ int serverKeyHandler(struct users *user, struct keys *key, int fd) {
             }
             write(fd, &pubkey_pem_size, sizeof(long));
         } else {
-            unsigned char *buffer = malloc(sizeOfOut);
+            unsigned char *buffer = (unsigned char *) malloc(sizeOfOut + 1);
             if(read(fd, buffer, sizeOfOut) <= 0) {
                 printf("Ошибка получения ключа\n");
                 return -1;
             }
+            buffer[sizeOfOut] = '\0';
             BIO *bio_memory = BIO_new_mem_buf(buffer, -1);
             user->pubKey = PEM_read_bio_PUBKEY(bio_memory, NULL, NULL, NULL);
             if (user->pubKey == NULL) {

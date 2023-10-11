@@ -77,6 +77,8 @@ char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
         ErrorHandler("Ошибка при расшифровке данных\n", statusCode);
         return "";
     }
+    free(encryptedData);
+    EVP_PKEY_CTX_free(ctxDecrypt);
     decryptedData[decryptedLen] = '\0';
     return decryptedData;
 }

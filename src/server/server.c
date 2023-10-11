@@ -42,6 +42,8 @@ struct args {
 void intHandler(int dummy) {
     close(*serverSocket);
     printServerLogMsg("Stopped server", true);
+    EVP_PKEY_free(key.pubKey);
+    EVP_PKEY_free(key.privKey);
     exit(0);
 }
 
@@ -140,7 +142,7 @@ void *Connection(void *argv) {
             fflush(stdout);
             nicknames[pthcount] = NULL;
             usersArr[pthcount] = NULL;
-            free(user->pubKey);
+            EVP_PKEY_free(user->pubKey);
             free(user); // Освобождаем структуру
             free(disbuffer);
             free(argv);

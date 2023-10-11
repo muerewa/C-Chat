@@ -51,6 +51,8 @@ void writeMsgHandler(int fd, char *newBuffer, EVP_PKEY *pubKey) {
         ErrorHandler(pubKey, "Ошибка при шифровании данных\n");
         exit(0);
     }
+    EVP_PKEY_CTX_free(ctxEncrypt);
     write(fd , &encryptedLen, sizeof(size_t));
     write(fd , encryptedData, encryptedLen);
+    free(encryptedData);
 }
