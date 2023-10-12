@@ -13,12 +13,19 @@
 #include "../../include/wrappers.h"
 #include "../../include/log.h"
 #include "../../include/serverHandlers.h"
+#include "../../include/msgHandlers.h"
+
 
 #define MSGLEN 2048
 
 struct users* usersArr[30] = {NULL}; // Массив сокетов
 char *nicknames[30] = {NULL};
+
+struct users* privateUsersArr[30] = {NULL}; // Массив сокетов
+char *privateNicknames[30] = {NULL};
+
 int count = 0; // Счетчик пользователей
+int privateCount = 0;
 
 struct keys key;
 
@@ -37,7 +44,7 @@ void intHandler(int dummy) {
     exit(0);
 }
 
-int newUser() {
+int newUser(struct users ** usersArr) {
     int i = 0;
     while (usersArr[i] != NULL) {
         i++;
@@ -58,17 +65,12 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
         if(count <= 30) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             pthread_t thread_id = count; // создаем id потока
-            int pthcount = newUser();
 
             printUserLogMsg(fd, "", "connected");
 
             struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Инициализируем структуру аргументов
 
-            Thread->pthcount = pthcount;
             Thread->fd = fd;
-            Thread->usersArr = usersArr;
-            Thread->nicknames = nicknames;
-            Thread->count = &count;
             Thread->key = &key;
 
             struct users *user = malloc(sizeof(struct users)); // Инициализируем структуру
@@ -83,10 +85,35 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
                 continue;
             }
 
+            int statcode = 0;
+            int valread;
+            char *roomType = readMsgHandler(fd, &valread, &key, &statcode);
+            int pthcount = 0;
+            if (strcmp(roomType,"public") == 0) {
+                Thread->usersArr = usersArr;
+                Thread->nicknames = nicknames;
+                Thread->count = &count;
+                pthcount = newUser(usersArr);
+                usersArr[pthcount] = user;
+                ++count;
+            } else if (strcmp(roomType,"private") == 0) {
+                Thread->usersArr = privateUsersArr;
+                Thread->nicknames = privateNicknames;
+                Thread->count = &privateCount;
+                pthcount = newUser(privateUsersArr);
+                privateUsersArr[pthcount] = user;
+                ++privateCount;
+            } else {
+                writeMsgHandler(user->fd,"Некорректное сообщение", user->pubKey);
+                close(fd);
+                free(user);
+                free(Thread);
+                continue;
+            }
+
+            Thread->pthcount = pthcount;
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
-            usersArr[pthcount] = user; // Добавляем в массив дескриптор
-            ++count;
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

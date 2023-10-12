@@ -26,12 +26,13 @@ void *Connection(void *argv) {
     int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
     struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
 
-    struct users **usersArr = ((struct args*)argv)->usersArr;
-    char **nicknames = ((struct args*)argv)->nicknames;
-    int *count = ((struct args*)argv)->count;
     struct keys *key = ((struct args*)argv)->key;
 
     while (true) {
+
+        struct users **usersArr = ((struct args*)argv)->usersArr;
+        char **nicknames = ((struct args*)argv)->nicknames;
+        int *count = ((struct args*)argv)->count;
 
         int statcode = 0;
         int valread;
