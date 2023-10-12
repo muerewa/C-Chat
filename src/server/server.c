@@ -89,18 +89,15 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             user->fd = fd;
             user->msgCount = 0;
 
-            int res = serverKeyHandler(user,&key,fd);
-            if (res == -1) {
+            if (serverKeyHandler(user,&key,fd) == -1) {
                 close(fd);
                 free(user);
                 free(Thread);
                 continue;
             }
 
-            int statcode = 0;
-            int valread;
+            int statcode = 0, valread, pthcount = 0;
             char *roomType = readMsgHandler(fd, &valread, &key, &statcode);
-            int pthcount = 0;
 
             if(roomHandler(roomType, Thread, &pthcount, user) == -1) {
                 writeMsgHandler(user->fd,"Некорректное сообщение", user->pubKey);
