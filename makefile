@@ -1,5 +1,5 @@
 install:
-	gcc -g src/server/server.c src/server/serverHandlers.c src/handlers/writeMsgHandler.c src/handlers/readMsgHandler.c \
+	gcc -g src/server/server.c src/server/connection.c src/server/serverHandlers.c src/handlers/writeMsgHandler.c src/handlers/readMsgHandler.c \
  	src/server/log.c src/encryption/RSA.c  \
  	src/wrappers.c -lm -pthread -lssl -lcrypto -O3 -o chat-server
 

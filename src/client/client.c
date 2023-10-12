@@ -24,7 +24,7 @@
 struct keys key;
 struct keys serverKeys;
 
-struct args {
+struct clientArgs {
     int fd;
 };
 
@@ -36,7 +36,7 @@ struct args {
  * @return void* 
  */
 void *readMsg(void *arguments) {
-    int fd = ((struct args*)arguments)->fd;
+    int fd = ((struct clientArgs*)arguments)->fd;
     int count = 0;
     long size;
     while (1) {
@@ -89,7 +89,7 @@ void *readMsg(void *arguments) {
  * @return void* 
  */
 void *writeMsg(void *arguments) {
-    int fd = ((struct args*)arguments)->fd;
+    int fd = ((struct clientArgs*)arguments)->fd;
     int count = 0;
     BIO *bio_mem = BIO_new(BIO_s_mem());
     PEM_write_bio_PUBKEY(bio_mem, key.pubKey);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     addr.sin_port = htons(port); // Порт сервера
     Inet_ptonfd(AF_INET, ip, &addr.sin_addr); // Задаем айпи сервера
 
-    struct args *arguments = (struct args *)malloc(sizeof(struct args));
+    struct clientArgs *arguments = (struct clientArgs *)malloc(sizeof(struct clientArgs));
     arguments->fd = client;
 
     Connectfd(client, (struct sockaddr *)&addr, sizeof addr);

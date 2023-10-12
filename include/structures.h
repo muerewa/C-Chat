@@ -16,4 +16,14 @@ struct users {
     EVP_PKEY *pubKey;
 };
 
+struct args {
+    int pthcount; // номер пользователя
+    int fd; // файловый дескриптор
+    struct users *user; // структура пользователя
+    struct keys *key;
+    struct users **usersArr;
+    char **nicknames;
+    int *count;
+}; // Аргументы для функции Connection
+
 #endif

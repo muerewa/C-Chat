@@ -8,11 +8,11 @@
 #include "stdlib.h"
 #include <signal.h>
 
+#include "../../include/connection.h"
 #include "../../include/RSA.h"
 #include "../../include/wrappers.h"
 #include "../../include/log.h"
 #include "../../include/serverHandlers.h"
-#include "../../include/msgHandlers.h"
 
 #define MSGLEN 2048
 
@@ -20,19 +20,9 @@ struct users* usersArr[30] = {NULL}; // Массив сокетов
 char *nicknames[30] = {NULL};
 int count = 0; // Счетчик пользователей
 
-pthread_mutex_t mutex;
-
-int *serverSocket = NULL;
-
 struct keys key;
 
-struct args {
-    int pthcount; // номер пользователя
-    int fd; // файловый дескриптор
-    struct users *user; // структура пользователя
-    struct keys *key;
-}; // Аргументы для функции Connection
-
+int *serverSocket = NULL;
 
 /**
  * @brief 
@@ -53,103 +43,6 @@ int newUser() {
         i++;
     }
     return i;
-}
-
-/**
- * @brief 
- * 
- * @param argv 
- * @return void* 
- */
-void *Connection(void *argv) {
-    while (true) {
-
-        int fd = ((struct args*)argv)->fd; // Достаем файловый дескриптор из аргументов
-
-        int pthcount = ((struct args*)argv)->pthcount; // Достаем номер пользователя
-
-        int statcode = 0;
-        int valread;
-        char *buffer = readMsgHandler(fd, &valread, &key, &statcode);
-        struct users *user = ((struct args*)argv)->user; // Достаем структуру юзера
-
-        if (statcode == -1) {
-            writeMsgHandler(user->fd,"Некорректное сообщение", user->pubKey);
-            continue;
-        }
-
-        if(valread > 0) {
-
-            user->name = user->msgCount == 0 ? strdup(buffer) : user->name;
-            char *msgBuff = user->msgCount == 0 ? " joined chat" : buffer;
-            char *Answer = (char *) malloc(strlen(user->name) + strlen(msgBuff) + 5); // Создаем буффер
-
-            if (user->msgCount == 0) {
-
-                char *msg = WelcomeMsg(user->name);
-                writeMsgHandler(fd, msg, user->pubKey);
-                free(msg);
-
-                printUserLogMsg(fd, user->name, "joined chat");
-                pthread_mutex_lock(&mutex);
-                nicknames[pthcount] = user->name;
-                pthread_mutex_unlock(&mutex);
-                strcpy(Answer, user->name);
-                strcat(Answer, msgBuff);
-            } else {
-                MsgBufferHandler(Answer, user->name, msgBuff);
-            }
-
-            for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
-                    pthread_mutex_lock(&mutex);
-                    writeMsgHandler(usersArr[i]->fd, Answer, usersArr[i]->pubKey);
-                    pthread_mutex_unlock(&mutex);
-                }
-            }
-            user->msgCount = 1;
-            free(Answer);
-            free(buffer);
-        } else {
-            int s = strlen(" disconnected");
-            char *disbuffer = malloc( s + 1);
-
-            if(user->msgCount != 0) {
-                disbuffer = realloc(disbuffer, s + 1 + strlen(user->name));
-                strcpy(disbuffer, user->name);
-                strcat(disbuffer, " disconnected");
-                printUserLogMsg(fd, user->name, "disconnected");
-                pthread_mutex_lock(&mutex);
-                free(user->name);
-                pthread_mutex_unlock(&mutex);
-            } else {
-                char *usr = "user";
-                disbuffer = realloc(disbuffer, strlen(usr) + 1 + s);
-                strcat(disbuffer, " disconnected");
-                printUserLogMsg(fd, "", "disconnected");
-            }
-
-            if ((user->msgCount != 0) && count >= 1) {
-                for (int i = 0; i < count; ++i) { // Проходимся по массиву сокетов
-                    if(nicknames[i] != NULL && usersArr[i]->fd != fd) {
-                        pthread_mutex_lock(&mutex);
-                        writeMsgHandler(usersArr[i]->fd, disbuffer, usersArr[i]->pubKey);
-                        pthread_mutex_unlock(&mutex);
-                    }
-                }
-            }
-            pthread_mutex_lock(&mutex);
-            fflush(stdout);
-            nicknames[pthcount] = NULL;
-            usersArr[pthcount] = NULL;
-            EVP_PKEY_free(user->pubKey);
-            free(user); // Освобождаем структуру
-            free(disbuffer);
-            free(argv);
-            pthread_mutex_unlock(&mutex);
-            pthread_exit(NULL); // Выходим из потока
-        }
-    }
 }
 
 
@@ -173,6 +66,10 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
             Thread->pthcount = pthcount;
             Thread->fd = fd;
+            Thread->usersArr = usersArr;
+            Thread->nicknames = nicknames;
+            Thread->count = &count;
+            Thread->key = &key;
 
             struct users *user = malloc(sizeof(struct users)); // Инициализируем структуру
             user->fd = fd;
