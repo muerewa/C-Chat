@@ -110,10 +110,14 @@ void *writeMsg(void *arguments) {
             buffer[strlen(buffer) - 1] = '\0';
             if (commandHandler(buffer, MAGENTA, RESET)) {
                 if (count == 2) {
-                    printf("Enter username: ");
+                    printf("Enter room type(public/private): ");
                     fflush(stdout);
                 }
                 continue;
+            }
+            if (count == 2) {
+                printf("Enter username: ");
+                fflush(stdout);
             }
             writeMsgHandler(fd, buffer, serverKeys.pubKey);
         }
@@ -155,7 +159,7 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
 
     printf("%s", MAGENTA);
-    printf("Welcome to C-Chat client!\n\tEnter :help to get help\n\nEnter username: ");
+    printf("Welcome to C-Chat client!\n\tEnter :help to get help\n\nEnter room type(public/private): ");
     fflush(stdout);
 
 
