@@ -32,9 +32,9 @@ struct keys key;
 int *serverSocket = NULL;
 
 /**
- * @brief 
- * 
- * @param dummy 
+ * @brief
+ *
+ * @param dummy
  */
 void intHandler(int dummy) {
     close(*serverSocket);
@@ -44,14 +44,26 @@ void intHandler(int dummy) {
     exit(0);
 }
 
-int newUser(struct users ** usersArr) {
-    int i = 0;
-    while (usersArr[i] != NULL) {
-        i++;
+int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users *user) {
+    if (strcmp(roomType,"public") == 0) {
+        Thread->usersArr = usersArr;
+        Thread->nicknames = nicknames;
+        Thread->count = &count;
+        *pthcount = newUser(usersArr);
+        usersArr[*pthcount] = user;
+        ++count;
+        return 0;
+    } else if (strcmp(roomType,"private") == 0) {
+        Thread->usersArr = privateUsersArr;
+        Thread->nicknames = privateNicknames;
+        Thread->count = &privateCount;
+        *pthcount = newUser(privateUsersArr);
+        privateUsersArr[*pthcount] = user;
+        ++privateCount;
+        return 0;
     }
-    return i;
+    return -1;
 }
-
 
 /**
  * @brief 
@@ -89,21 +101,8 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int valread;
             char *roomType = readMsgHandler(fd, &valread, &key, &statcode);
             int pthcount = 0;
-            if (strcmp(roomType,"public") == 0) {
-                Thread->usersArr = usersArr;
-                Thread->nicknames = nicknames;
-                Thread->count = &count;
-                pthcount = newUser(usersArr);
-                usersArr[pthcount] = user;
-                ++count;
-            } else if (strcmp(roomType,"private") == 0) {
-                Thread->usersArr = privateUsersArr;
-                Thread->nicknames = privateNicknames;
-                Thread->count = &privateCount;
-                pthcount = newUser(privateUsersArr);
-                privateUsersArr[pthcount] = user;
-                ++privateCount;
-            } else {
+
+            if(roomHandler(roomType, Thread, &pthcount, user) == -1) {
                 writeMsgHandler(user->fd,"Некорректное сообщение", user->pubKey);
                 close(fd);
                 free(user);

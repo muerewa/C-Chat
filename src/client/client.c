@@ -10,7 +10,6 @@
 #include "../../include/RSA.h"
 #include "../../include/clientHandlers.h"
 #include "../../include/msgHandlers.h"
-#include <openssl/evp.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 

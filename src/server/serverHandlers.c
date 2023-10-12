@@ -66,3 +66,12 @@ void MsgBufferHandler(char *buffer, const char *username, const char *msgBuff) {
     strcat(buffer, ": ");
     strcat(buffer, msgBuff); // Добавляем в буффер сообщение
 }
+
+
+int newUser(struct users ** usersArr) {
+    int i = 0;
+    while (usersArr[i] != NULL) {
+        i++;
+    }
+    return i;
+}
