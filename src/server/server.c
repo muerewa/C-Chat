@@ -15,26 +15,21 @@
 #include "../../include/serverHandlers.h"
 #include "../../include/msgHandlers.h"
 
+struct users* usersArr[30] = {NULL}; // Массив пользователей публичной комнаты
+char *nicknames[30] = {NULL}; // Массив имен пользователей публичной комнаты
 
-#define MSGLEN 2048
+struct users* privateUsersArr[30] = {NULL}; // Массив пользователей приватной комнаты
+char *privateNicknames[30] = {NULL}; // Массив имен пользователей приватной комнаты
 
-struct users* usersArr[30] = {NULL}; // Массив сокетов
-char *nicknames[30] = {NULL};
+char *password; // Пароль для приватной комнаты
 
-struct users* privateUsersArr[30] = {NULL}; // Массив сокетов
-char *privateNicknames[30] = {NULL};
+int count = 0; // Счетчик пользователей публичной комнаты
+int privateCount = 0; // Счетчик пользователей приватной комнаты
+struct keys key; // Струтура RSA ключей сервера
 
-char *password;
-
-int count = 0; // Счетчик пользователей
-int privateCount = 0;
-
-struct keys key;
-
-int *serverSocket = NULL;
-
+int *serverSocket = NULL; // Указатель на сокет сервера
 /**
- * @brief
+ * @brief - обработчик остановки сервера
  *
  * @param dummy
  */
@@ -46,6 +41,17 @@ void intHandler(int dummy) {
     exit(0);
 }
 
+/**
+ * @brief - функция для распределения в комнаты
+ *
+ * @param roomType - тип комнаты, полученный от пользователя
+ * @param Thread - структура аргументов, передаваемые в фукнцию Connection
+ * @param pthcount - номер пользователя в массиве пользователей
+ * @param user - структура пользователя
+ * @param fd - file descriptor пользователя
+ *
+ * @return - 0 при успешном выполнении, -1 при ошибке
+ */
 int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users *user, int fd) {
     if (strcmp(roomType,"public") == 0) {
         Thread->usersArr = usersArr;
@@ -75,11 +81,11 @@ int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users
 }
 
 /**
- * @brief 
+ * @brief Функция, обрабатывающая новых пользователей
  * 
- * @param server 
- * @param addr 
- * @param addrlen 
+ * @param server - file descriptor сервера
+ * @param addr - адрес сокета
+ * @param addrlen - размер адреса
  */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
@@ -87,7 +93,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             pthread_t thread_id = count; // создаем id потока
 
-            printUserLogMsg(fd, "", "connected");
+            printUserLogMsg(fd, "", "connected"); // Вывод лога о присоеденении сокета
 
             struct args *Thread = (struct args *)malloc(sizeof(struct args)); // Инициализируем структуру аргументов
 
@@ -98,30 +104,31 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             user->fd = fd;
             user->msgCount = 0;
 
-            if (serverKeyHandler(user,&key,fd) == -1) {
-                close(fd);
-                free(user);
-                free(Thread);
+            if (serverKeyHandler(user,&key,fd) == -1) { // Обрабатываем ошибку при неуспешном выполненнии serverKeyHandler
+                close(fd); // Закрываем сокет пользователя
+                free(user); // Освобождаем структуру пользователя
+                free(Thread); // Освобождаем структуру аргументов
                 continue;
             }
 
             int statcode = 0, valread, pthcount = 0;
-            char *roomType = readMsgHandler(fd, &valread, &key, &statcode);
+            char *roomType = readMsgHandler(fd, &valread, &key, &statcode); // Получаем тип комнаты от пользователя
 
-            if(roomHandler(roomType, Thread, &pthcount, user, fd) == -1) {
-                writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey);
-                close(fd);
-                free(user);
-                free(Thread);
+            if(roomHandler(roomType, Thread, &pthcount, user, fd) == -1) { // Обработка ошибки при неуспешном выполнении roomHandler
+                writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey); // Отправляем пользователю сообщение о неудаче
+                close(fd); // Закрываем сокет пользователя
+                free(user); // Освобождаем структуру пользователя
+                free(Thread); // Освобождаем структуру аргументов
                 continue;
             }
             free(roomType);
             Thread->pthcount = pthcount;
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
+
             pthread_attr_t attr;
             pthread_attr_init(&attr);
-            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED); // Создаем и инициализируем аргументы для потока
             pthread_create(&thread_id, &attr, Connection, (void *)Thread); // Создаем отдельный поток для каждого пользователя
         }
     }
@@ -129,7 +136,7 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
  
 /**
- * @brief 
+ * @brief main функция серверной части чата
  * 
  * @return int 
  */
@@ -138,6 +145,7 @@ int main(int argc, char **argv) {
     char *ip;
     int port;
     int rez;
+    // Обрабатываем аргументы командной строки
     while ( (rez = getopt(argc, argv, "hi:p:s:")) != -1){
         switch (rez) {
             case 'h': printf("Use -i to set ip of server, -p to set port, -s to set secret phrase for private room\n"); break;
@@ -170,7 +178,7 @@ int main(int argc, char **argv) {
 
     struct sockaddr_in addr = {0}; // Создаем адресс сокета
     addr.sin_family = AF_INET; // Семейство протоколов(ipv4)
-    addr.sin_port = htons(3030); // Порт
+    addr.sin_port = htons(port); // Порт
 
     Bind(server, (const struct sockaddr *) &addr, sizeof addr); // Привязываем к сокету адресс
     Listen(server, 5); // Прослушваем(5 человек максимум могут находиться в очереди)

@@ -7,6 +7,12 @@
 
 #define MAX_CIPHER_SIZE 2048
 
+/**
+ * @brief Обработка ошибок щифрования
+ *
+ * @param pubKey - публичный ключ
+ * @param errorMsg - сообщение об ошибке
+ */
 static void ErrorHandler(EVP_PKEY *pubKey, char *errorMsg) {
     printf("%s", errorMsg);
     EVP_PKEY_free(pubKey);
@@ -14,15 +20,16 @@ static void ErrorHandler(EVP_PKEY *pubKey, char *errorMsg) {
 }
 
 /**
+ * @brief Обработчик отправки сообщения
  *
- * @param fd
- * @param newBuffer
- * @param e
- * @param n
+ * @param fd - file descriptor
+ * @param newBuffer - сообщение
+ * @param pubKey - публичный ключ собеседника(клиент/сервер)
  */
 void writeMsgHandler(int fd, char *newBuffer, EVP_PKEY *pubKey) {
     int size = strlen(newBuffer);
 
+    // Создание контекста шифрования
     EVP_PKEY_CTX *ctxEncrypt = EVP_PKEY_CTX_new(pubKey, NULL);
     if (ctxEncrypt == NULL) {
         ErrorHandler(pubKey, "Ошибка при создании контекста шифрования RSA\n");
@@ -35,7 +42,7 @@ void writeMsgHandler(int fd, char *newBuffer, EVP_PKEY *pubKey) {
         exit(0);
     }
 
-    // Вычисление размера выходного буфера для шифротекста
+    // Вычисление размера выходного буфера для зашифрованного текста
     size_t encryptedLen;
     if (EVP_PKEY_encrypt(ctxEncrypt, NULL, &encryptedLen, (const unsigned char *)newBuffer, size) != 1) {
         EVP_PKEY_CTX_free(ctxEncrypt);
@@ -51,8 +58,8 @@ void writeMsgHandler(int fd, char *newBuffer, EVP_PKEY *pubKey) {
         ErrorHandler(pubKey, "Ошибка при шифровании данных\n");
         exit(0);
     }
-    EVP_PKEY_CTX_free(ctxEncrypt);
-    write(fd , &encryptedLen, sizeof(size_t));
-    write(fd , encryptedData, encryptedLen);
-    free(encryptedData);
+    EVP_PKEY_CTX_free(ctxEncrypt);  // Освобождаем контекст шифрования
+    write(fd , &encryptedLen, sizeof(size_t)); // Передаем длину сообщения
+    write(fd , encryptedData, encryptedLen); // Передаем зашифрованное сообщение
+    free(encryptedData); // Освобождаем буфер
 }

@@ -4,10 +4,11 @@
 #include "stdlib.h"
 
 /**
+ * @brief - обработчик команд
  *
- * @param buffer
- * @param MAGENTA
- * @param RESET
+ * @param buffer - сообщение
+ * @param MAGENTA - фиолетовый цвет
+ * @param RESET - дефолтный цвет шрифта терминала
  * @return
  */
 int commandHandler(char *buffer, char *MAGENTA, char *RESET) {

@@ -22,11 +22,11 @@ void getTime(char *dateTime) {
 
 
 /**
- * @brief Получаем ip и port пользователя
+ * @brief Выводит лог пользователя
  * 
- * @param fd 
- * @param name 
- * @param msg 
+ * @param fd - сокет пользователя
+ * @param name - имя пользователя
+ * @param msg - имя пользователя
  */
 void printUserLogMsg(int fd, char *name, char *msg) {
     struct sockaddr_in addr;
@@ -47,7 +47,7 @@ void printUserLogMsg(int fd, char *name, char *msg) {
 }
 
 /**
- * @brief 
+ * @brief Выводит лог сервера
  * 
  * @param msg 
  * @param removeSignal 

@@ -20,8 +20,8 @@
 #define RESET "\033[0m"
 #define RED "\033[0;31m"
 
-struct keys key;
-struct keys serverKeys;
+struct keys key; // Ключи клиента
+struct keys serverKeys; // Структура для ключа сервера
 
 struct clientArgs {
     int fd;
@@ -40,14 +40,14 @@ void *readMsg(void *arguments) {
     long size;
     while (1) {
         if (count == 0) {
-            read(fd, &size, sizeof(long));
+            read(fd, &size, sizeof(long)); // Читаем длину публичного ключа сервера
         }else if (count == 1) {
             char *buffer = malloc(size);
-            if (read(fd, buffer, size) == 0) {
+            if (read(fd, buffer, size) == 0) { // Получаем публичный ключ сервера
                 printf("Ошибка получения ключа");
             }
             BIO *bio_memory = BIO_new_mem_buf(buffer, -1);
-            serverKeys.pubKey = PEM_read_bio_PUBKEY(bio_memory, NULL, NULL, NULL);
+            serverKeys.pubKey = PEM_read_bio_PUBKEY(bio_memory, NULL, NULL, NULL); // Записываем ключ в структуру
             if (serverKeys.pubKey == NULL) {
                 printf("Ошибка восстановления ключа\n");
                 exit(0);
@@ -57,8 +57,8 @@ void *readMsg(void *arguments) {
         } else {
             int valread;
             int statCode = 0;
-            char *buffer = readMsgHandler(fd, &valread, &key, &statCode);
-            if (statCode == -1) {
+            char *buffer = readMsgHandler(fd, &valread, &key, &statCode); // Читаем сообщение
+            if (statCode == -1) { // Обрабатываем ошибки
                 printf("%s", RED);
                 printf("> Server: ошибка при передаче сообщения\n");
                 printf("%s", RESET);
@@ -88,8 +88,9 @@ void *readMsg(void *arguments) {
  * @return void* 
  */
 void *writeMsg(void *arguments) {
-    int fd = ((struct clientArgs*)arguments)->fd;
+    int fd = ((struct clientArgs*)arguments)->fd; // Достаем file descriptor
     int count = 0;
+    // Преобразуем публичный ключ в строку
     BIO *bio_mem = BIO_new(BIO_s_mem());
     PEM_write_bio_PUBKEY(bio_mem, key.pubKey);
     char *pubkey_pem;
@@ -97,16 +98,16 @@ void *writeMsg(void *arguments) {
     free(bio_mem);
     while (1) {
         if (count == 0) {
-            write(fd, &size, sizeof(long));
+            write(fd, &size, sizeof(long)); // Передаем длину публичного ключа
         } else if (count == 1) {
-            write(fd, pubkey_pem, size);
+            write(fd, pubkey_pem, size); // Передаем публичный ключ
         } else {
             char buffer[MSGLEN];
             if (count > 2) {
                 printf("%s",RESET);
             }
-            fgets(buffer, MSGLEN, stdin);
-            buffer[strlen(buffer) - 1] = '\0';
+            fgets(buffer, MSGLEN, stdin); // Принимаем пользовательский ввод
+            buffer[strlen(buffer) - 1] = '\0'; // Убираем '\n'
             if (commandHandler(buffer, MAGENTA, RESET)) {
                 if (count == 2) {
                     printf("Enter room type(public/private): ");
@@ -180,8 +181,8 @@ int main(int argc, char *argv[]) {
     Connectfd(client, (struct sockaddr *)&addr, sizeof addr);
 
     pthread_t thread_id = 0;
-    pthread_create(&thread_id, NULL, writeMsg, (void *)arguments);
-    pthread_create(&thread_id, NULL, readMsg, (void *)arguments);
+    pthread_create(&thread_id, NULL, writeMsg, (void *)arguments); // Поток для чтения сообщений
+    pthread_create(&thread_id, NULL, readMsg, (void *)arguments); // Поток для передачи сообщений
     pthread_join(thread_id, NULL);
 
     return 0;

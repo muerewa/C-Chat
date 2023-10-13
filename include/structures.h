@@ -5,25 +5,25 @@
 #include <openssl/pem.h>
 
 struct keys {
-    EVP_PKEY *pubKey;
-    EVP_PKEY *privKey;
+    EVP_PKEY *pubKey; // публичный RSA ключ
+    EVP_PKEY *privKey; // приватный RSA ключ
 };
 
 struct users {
     int fd; // файловый дескриптор
     int msgCount; // счетчик сообщений
     char *name; // имя пользователя
-    EVP_PKEY *pubKey;
+    EVP_PKEY *pubKey; // публичный ключ пользователя
 };
 
 struct args {
     int pthcount; // номер пользователя
     int fd; // файловый дескриптор
     struct users *user; // структура пользователя
-    struct keys *key;
-    struct users **usersArr;
-    char **nicknames;
-    int *count;
+    struct keys *key; // структура ключей
+    struct users **usersArr; // массив пользователей
+    char **nicknames; // массив имен пользователей
+    int *count; // кол-во пользователей в комнате
 }; // Аргументы для функции Connection
 
 #endif

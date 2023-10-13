@@ -3,18 +3,14 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include <openssl/evp.h>
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
 
 #define MAX_CIPHER_SIZE 2048
 
 /**
+ * @brief Обработка ошибок дешифрования
  *
- * @param fd
- * @param valread
- * @param d
- * @param n
- * @return
+ * @param errorMsg - сообщение об ошибке
+ * @param statusCode - код ошибки
  */
 static void ErrorHandler(char *errorMsg, int *statusCode) {
     printf("%s", errorMsg);
@@ -22,14 +18,24 @@ static void ErrorHandler(char *errorMsg, int *statusCode) {
     *statusCode = -1;
 }
 
+/**
+ * @brief Обработчик получения сообщения
+ *
+ * @param fd - file decriptor
+ * @param valread - number read
+ * @param key - структура ключей RSA
+ * @param statusCode - код ошибки
+ * @return
+ */
 char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
     size_t size = 0;
 
-    int sread = read(fd, &size, sizeof(size_t));
+    int sread = read(fd, &size, sizeof(size_t)); // Читаем длину сообщения
 
     char *encryptedData = malloc(size);
-    *valread = read(fd, encryptedData, size);
+    *valread = read(fd, encryptedData, size); // Читаем зашифрованное сообщение
 
+    // Обрабатываем неккоректные данные
     if (*valread == 0) {
         free(encryptedData);
         return "";
@@ -77,8 +83,8 @@ char *readMsgHandler(int fd, int *valread, struct keys *key, int *statusCode) {
         ErrorHandler("Ошибка при расшифровке данных\n", statusCode);
         return "";
     }
-    free(encryptedData);
-    EVP_PKEY_CTX_free(ctxDecrypt);
+    free(encryptedData); // Освобождаем буфер
+    EVP_PKEY_CTX_free(ctxDecrypt); // Освобождаем контекст дешифрования
     decryptedData[decryptedLen] = '\0';
     return decryptedData;
 }

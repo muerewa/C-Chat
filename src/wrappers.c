@@ -1,12 +1,9 @@
 #include "../include/wrappers.h"
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 
-// На java больше подходит с PascalCase
 /**
  * @brief 
  * 
