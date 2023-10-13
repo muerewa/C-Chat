@@ -15,6 +15,8 @@
 #include "../../include/serverHandlers.h"
 #include "../../include/msgHandlers.h"
 
+#define MAXUSERS 30 // Максимальное кол-во пользователей + 1
+
 struct users* usersArr[30] = {NULL}; // Массив пользователей публичной комнаты
 char *nicknames[30] = {NULL}; // Массив имен пользователей публичной комнаты
 
@@ -50,10 +52,13 @@ void intHandler(int dummy) {
  * @param user - структура пользователя
  * @param fd - file descriptor пользователя
  *
- * @return - 0 при успешном выполнении, -1 при ошибке
+ * @return - 0 при успешном выполнении, -1 при ошибке, 1 при нехватке мест
  */
 int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users *user, int fd) {
     if (strcmp(roomType,"public") == 0) {
+        if (count > MAXUSERS) {
+            return 1;
+        }
         Thread->usersArr = usersArr;
         Thread->nicknames = nicknames;
         Thread->count = &count;
@@ -62,6 +67,9 @@ int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users
         ++count;
         return 0;
     } else if (strcmp(roomType,"private") == 0) {
+        if (privateCount > MAXUSERS) {
+            return 1;
+        }
         int statcode = 0, valread;
         char *pass= readMsgHandler(fd, &valread, &key, &statcode);
         if (strcmp(pass, password) == 0) {
@@ -89,7 +97,7 @@ int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users
  */
 void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
     while (true) {
-        if(count <= 30) {
+        if(count <= MAXUSERS || privateCount <= MAXUSERS) {
             int fd = Accept(server, addr, addrlen); // Принимаем новое подключение
             pthread_t thread_id = count; // создаем id потока
 
@@ -114,8 +122,16 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int statcode = 0, valread, pthcount = 0;
             char *roomType = readMsgHandler(fd, &valread, &key, &statcode); // Получаем тип комнаты от пользователя
 
-            if(roomHandler(roomType, Thread, &pthcount, user, fd) == -1) { // Обработка ошибки при неуспешном выполнении roomHandler
+            int res = roomHandler(roomType, Thread, &pthcount, user, fd);
+
+            if(res == -1) { // Обработка ошибки при неуспешном выполнении roomHandler
                 writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey); // Отправляем пользователю сообщение о неудаче
+                close(fd); // Закрываем сокет пользователя
+                free(user); // Освобождаем структуру пользователя
+                free(Thread); // Освобождаем структуру аргументов
+                continue;
+            } else if (res == 1) {
+                writeMsgHandler(user->fd,"Прывшено максимальное кол-во пользователей. Попробуйте присоедениться позже", user->pubKey); // Отправляем пользователю сообщение о неудаче
                 close(fd); // Закрываем сокет пользователя
                 free(user); // Освобождаем структуру пользователя
                 free(Thread); // Освобождаем структуру аргументов
