@@ -24,6 +24,8 @@ char *nicknames[30] = {NULL};
 struct users* privateUsersArr[30] = {NULL}; // Массив сокетов
 char *privateNicknames[30] = {NULL};
 
+char *password;
+
 int count = 0; // Счетчик пользователей
 int privateCount = 0;
 
@@ -44,7 +46,7 @@ void intHandler(int dummy) {
     exit(0);
 }
 
-int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users *user) {
+int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users *user, int fd) {
     if (strcmp(roomType,"public") == 0) {
         Thread->usersArr = usersArr;
         Thread->nicknames = nicknames;
@@ -54,12 +56,19 @@ int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users
         ++count;
         return 0;
     } else if (strcmp(roomType,"private") == 0) {
-        Thread->usersArr = privateUsersArr;
-        Thread->nicknames = privateNicknames;
-        Thread->count = &privateCount;
-        *pthcount = newUser(privateUsersArr);
-        privateUsersArr[*pthcount] = user;
-        ++privateCount;
+        int statcode = 0, valread;
+        char *pass= readMsgHandler(fd, &valread, &key, &statcode);
+        if (strcmp(pass, password) == 0) {
+            Thread->usersArr = privateUsersArr;
+            Thread->nicknames = privateNicknames;
+            Thread->count = &privateCount;
+            *pthcount = newUser(privateUsersArr);
+            privateUsersArr[*pthcount] = user;
+            ++privateCount;
+        } else {
+            return -1;
+        }
+        free(pass);
         return 0;
     }
     return -1;
@@ -99,14 +108,14 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int statcode = 0, valread, pthcount = 0;
             char *roomType = readMsgHandler(fd, &valread, &key, &statcode);
 
-            if(roomHandler(roomType, Thread, &pthcount, user) == -1) {
-                writeMsgHandler(user->fd,"Некорректное сообщение", user->pubKey);
+            if(roomHandler(roomType, Thread, &pthcount, user, fd) == -1) {
+                writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey);
                 close(fd);
                 free(user);
                 free(Thread);
                 continue;
             }
-
+            free(roomType);
             Thread->pthcount = pthcount;
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
@@ -125,6 +134,24 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
  * @return int 
  */
 int main(int argc, char **argv) {
+
+    char *ip;
+    int port;
+    int rez;
+    while ( (rez = getopt(argc, argv, "hi:p:s:")) != -1){
+        switch (rez) {
+            case 'h': printf("Use -i to set ip of server, -p to set port, -s to set secret phrase for private room\n"); break;
+            case 'i': ip = optarg; break;
+            case 'p': port = atoi(optarg); break;
+            case 's': password = optarg; break;
+        }
+    }
+
+    if (port == 0 || ip == NULL || password == NULL) {
+        printf("Invalid arguments. Try -h to get help\n");
+        exit(0);
+    }
+
     printf("Generating keys...\n");
     fflush(stdout);
 

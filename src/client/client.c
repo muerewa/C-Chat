@@ -114,11 +114,16 @@ void *writeMsg(void *arguments) {
                 }
                 continue;
             }
+            writeMsgHandler(fd, buffer, serverKeys.pubKey);
+            if (strcmp(buffer, "private") == 0) {
+                printf("Enter secret phrase: ");
+                fflush(stdout);
+                continue;
+            }
             if (count == 2) {
                 printf("Enter username: ");
                 fflush(stdout);
             }
-            writeMsgHandler(fd, buffer, serverKeys.pubKey);
         }
         count++;
     }
