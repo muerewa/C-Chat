@@ -79,10 +79,11 @@ int roomHandler(char *roomType, struct args *Thread, int *pthcount, struct users
             *pthcount = newUser(privateUsersArr);
             privateUsersArr[*pthcount] = user;
             ++privateCount;
+            free(pass);
         } else {
+            free(pass);
             return -1;
         }
-        free(pass);
         return 0;
     }
     return -1;
@@ -124,20 +125,24 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
 
             int res = roomHandler(roomType, Thread, &pthcount, user, fd);
 
+            free(roomType);
             if(res == -1) { // Обработка ошибки при неуспешном выполнении roomHandler
                 writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey); // Отправляем пользователю сообщение о неудаче
+                printUserLogMsg(fd, "", "disconnected");
                 close(fd); // Закрываем сокет пользователя
+                EVP_PKEY_free(user->pubKey); // Освобождаем ключ пользователя
                 free(user); // Освобождаем структуру пользователя
                 free(Thread); // Освобождаем структуру аргументов
                 continue;
             } else if (res == 1) {
                 writeMsgHandler(user->fd,"Прывшено максимальное кол-во пользователей. Попробуйте присоедениться позже", user->pubKey); // Отправляем пользователю сообщение о неудаче
+                printUserLogMsg(fd, "", "disconnected");
                 close(fd); // Закрываем сокет пользователя
+                EVP_PKEY_free(user->pubKey); // Освобождаем ключ пользователя
                 free(user); // Освобождаем структуру пользователя
                 free(Thread); // Освобождаем структуру аргументов
                 continue;
             }
-            free(roomType);
             Thread->pthcount = pthcount;
             user->msgCount = 0;
             Thread->user = user; // Передаем структуру в аргументы потока
