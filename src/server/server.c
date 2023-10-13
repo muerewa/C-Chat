@@ -196,10 +196,11 @@ int main(int argc, char **argv) {
 
     int server = Socket(AF_INET, SOCK_STREAM, 0); // Создаем сокет
     serverSocket = &server;
-
     struct sockaddr_in addr = {0}; // Создаем адресс сокета
+    Inet_ptonfd(AF_INET, ip, &addr.sin_addr);
     addr.sin_family = AF_INET; // Семейство протоколов(ipv4)
     addr.sin_port = htons(port); // Порт
+
 
     Bind(server, (const struct sockaddr *) &addr, sizeof addr); // Привязываем к сокету адресс
     Listen(server, 5); // Прослушваем(5 человек максимум могут находиться в очереди)
