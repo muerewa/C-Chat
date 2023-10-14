@@ -1,9 +1,10 @@
-#include "stdio.h"
-#include "stdlib.h"
-#include "../../include/RSA.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
+
+#include "../../include/RSA.h"
 
 /**
  * @brief - обрабатываем ошибки

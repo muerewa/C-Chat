@@ -1,7 +1,8 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "../../include/clientHandlers.h"
-#include "string.h"
-#include "stdio.h"
-#include "stdlib.h"
 
 /**
  * @brief - обработчик команд

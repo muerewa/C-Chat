@@ -1,9 +1,10 @@
 #include "string.h"
 #include "unistd.h"
-#include "../../include/msgHandlers.h"
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
-#include <openssl/pem.h>
+
+#include "../../include/msgHandlers.h"
+
 
 #define MAX_CIPHER_SIZE 2048
 

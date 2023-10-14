@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "unistd.h"
+#include <unistd.h>
 #include <pthread.h>
-#include "stdbool.h"
-#include "string.h"
-#include "stdlib.h"
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <signal.h>
 
 #include "../../include/connection.h"
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     printf("Generating keys...\n");
     fflush(stdout);
 
-    generateKeys(&key);
+    generateKeys(&key); // Генерируем ключи RSA
 
     printf("done generating keys\n");
     fflush(stdout);

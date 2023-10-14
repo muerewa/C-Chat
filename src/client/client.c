@@ -1,17 +1,18 @@
-#include "stdio.h"
-#include "../../include/wrappers.h"
+#include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "unistd.h"
-#include "string.h"
-#include "pthread.h"
-#include "stdlib.h"
+#include <unistd.h>
+#include <string.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+
+#include "../../include/wrappers.h"
 #include "../../include/structures.h"
 #include "../../include/RSA.h"
 #include "../../include/clientHandlers.h"
 #include "../../include/msgHandlers.h"
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
 
 #define MSGLEN 2048
 

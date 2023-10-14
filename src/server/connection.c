@@ -1,11 +1,11 @@
-#include "../../include/connection.h"
 #include <stdio.h>
 #include <pthread.h>
-#include "stdbool.h"
-#include "string.h"
-#include "stdlib.h"
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <openssl/evp.h>
 
+#include "../../include/connection.h"
 #include "../../include/structures.h"
 #include "../../include/log.h"
 #include "../../include/msgHandlers.h"
