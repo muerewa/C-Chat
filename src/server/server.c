@@ -126,16 +126,12 @@ void ConnLoop(int server, struct sockaddr *addr, socklen_t *addrlen) {
             int res = roomHandler(roomType, Thread, &pthcount, user, fd);
 
             free(roomType);
-            if(res == -1) { // Обработка ошибки при неуспешном выполнении roomHandler
-                writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey); // Отправляем пользователю сообщение о неудаче
-                printUserLogMsg(fd, "", "disconnected");
-                close(fd); // Закрываем сокет пользователя
-                EVP_PKEY_free(user->pubKey); // Освобождаем ключ пользователя
-                free(user); // Освобождаем структуру пользователя
-                free(Thread); // Освобождаем структуру аргументов
-                continue;
-            } else if (res == 1) {
-                writeMsgHandler(user->fd,"Прывшено максимальное кол-во пользователей. Попробуйте присоедениться позже", user->pubKey); // Отправляем пользователю сообщение о неудаче
+            if (res != 0) {
+                if(res == -1) { // Обработка ошибки при неуспешном выполнении roomHandler
+                    writeMsgHandler(user->fd,"Некорректное сообщение или неправильный пароль", user->pubKey); // Отправляем пользователю сообщение о неудаче
+                } else if (res == 1) {
+                    writeMsgHandler(user->fd,"Прывшено максимальное кол-во пользователей. Попробуйте присоедениться позже", user->pubKey); // Отправляем пользователю сообщение о неудаче
+                }
                 printUserLogMsg(fd, "", "disconnected");
                 close(fd); // Закрываем сокет пользователя
                 EVP_PKEY_free(user->pubKey); // Освобождаем ключ пользователя
@@ -197,7 +193,7 @@ int main(int argc, char **argv) {
     int server = Socket(AF_INET, SOCK_STREAM, 0); // Создаем сокет
     serverSocket = &server;
     struct sockaddr_in addr = {0}; // Создаем адресс сокета
-    Inet_ptonfd(AF_INET, ip, &addr.sin_addr);
+    Inet_ptonfd(AF_INET, ip, &addr.sin_addr); // Устанавливаем ip сервера
     addr.sin_family = AF_INET; // Семейство протоколов(ipv4)
     addr.sin_port = htons(port); // Порт
 
