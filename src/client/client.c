@@ -43,7 +43,7 @@ void *readMsg(void *arguments) {
         if (count == 0) {
             read(fd, &size, sizeof(long)); // Читаем длину публичного ключа сервера
         }else if (count == 1) {
-            char *buffer = malloc(size);
+            char *buffer = malloc(size + 1);
             if (read(fd, buffer, size) == 0) { // Получаем публичный ключ сервера
                 printf("Ошибка получения ключа");
             }
@@ -53,7 +53,7 @@ void *readMsg(void *arguments) {
                 printf("Ошибка восстановления ключа\n");
                 exit(0);
             }
-            free(bio_memory);
+            BIO_free(bio_memory);
             free(buffer);
         } else {
             int valread;
@@ -92,12 +92,13 @@ void *writeMsg(void *arguments) {
     int fd = ((struct clientArgs*)arguments)->fd; // Достаем file descriptor
     int count = 0;
     // Преобразуем публичный ключ в строку
-    BIO *bio_mem = BIO_new(BIO_s_mem());
-    PEM_write_bio_PUBKEY(bio_mem, key.pubKey);
+
     char *pubkey_pem;
-    long size = BIO_get_mem_data(bio_mem, &pubkey_pem);
-    free(bio_mem);
+    long size;
     while (1) {
+        BIO *bio_mem = BIO_new(BIO_s_mem());
+        PEM_write_bio_PUBKEY(bio_mem, key.pubKey);
+        size = BIO_get_mem_data(bio_mem, &pubkey_pem);
         if (count == 0) {
             write(fd, &size, sizeof(long)); // Передаем длину публичного ключа
         } else if (count == 1) {
@@ -114,12 +115,14 @@ void *writeMsg(void *arguments) {
                     printf("Enter room type(public/private): ");
                     fflush(stdout);
                 }
+                BIO_free(bio_mem);
                 continue;
             }
             writeMsgHandler(fd, buffer, serverKeys.pubKey);
             if (strcmp(buffer, "private") == 0) {
                 printf("Enter secret phrase: ");
                 fflush(stdout);
+                BIO_free(bio_mem);
                 continue;
             }
             if (count == 2) {
@@ -127,6 +130,7 @@ void *writeMsg(void *arguments) {
                 fflush(stdout);
             }
         }
+        BIO_free(bio_mem);
         count++;
     }
 }
@@ -182,8 +186,8 @@ int main(int argc, char *argv[]) {
     Connectfd(client, (struct sockaddr *)&addr, sizeof addr);
 
     pthread_t thread_id = 0;
-    pthread_create(&thread_id, NULL, writeMsg, (void *)arguments); // Поток для чтения сообщений
-    pthread_create(&thread_id, NULL, readMsg, (void *)arguments); // Поток для передачи сообщений
+    pthread_create(&thread_id, NULL, writeMsg, (void *)arguments); // Поток для передачи сообщений
+    pthread_create(&thread_id, NULL, readMsg, (void *)arguments); // Поток для чтения сообщений
     pthread_join(thread_id, NULL);
 
     return 0;
