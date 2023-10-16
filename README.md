@@ -1,3 +1,4 @@
+[![CI сборка](https://github.com/muerewa/C-Chat/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/muerewa/C-Chat/actions/workflows/c-cpp.yml)
 ### Description
 ____
 Simple terminal chat written in C using sockets
